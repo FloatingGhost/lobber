@@ -1,0 +1,2 @@
+defmodule Lobber do
+end
