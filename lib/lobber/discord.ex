@@ -61,7 +61,7 @@ defmodule Lobber.Discord do
     client =
       Tesla.client([
         {Tesla.Middleware.BaseUrl, @discord},
-        {Tesla.Middleware.Headers, headers()},
+        {Tesla.Middleware.Headers, [{"content-type", "application/json"} | headers()]},
         Tesla.Middleware.JSON
       ])
 
@@ -86,7 +86,10 @@ defmodule Lobber.Discord do
        sequence_number: nil,
        resume_url: nil,
        heartbeat_acknowledged: true,
-       session_id: nil
+       session_id: nil,
+       client: client,
+       user_id: nil,
+       messages: []
      }}
   end
 
@@ -208,7 +211,7 @@ defmodule Lobber.Discord do
            "op" => 0,
            "s" => seq,
            "t" => "READY",
-           "d" => %{"user" => %{"username" => username}}
+           "d" => %{"user" => %{"username" => username, "id" => id}}
          } = message,
          state
        ) do
@@ -221,7 +224,7 @@ defmodule Lobber.Discord do
       }
     } = message
 
-    %{state | sequence_number: seq, resume_url: resume_url, session_id: session_id}
+    %{state | sequence_number: seq, resume_url: resume_url, session_id: session_id, user_id: id}
   end
 
   defp handle_data(
@@ -255,17 +258,35 @@ defmodule Lobber.Discord do
   defp handle_data(
          %{
            "op" => 0,
-           "s" => seq,
            "t" => "MESSAGE_CREATE",
            "d" => %{
-             "author" => %{"username" => username},
-             "content" => content
+             "author" => %{"id" => id}
            }
+         },
+         %{user_id: user_id} = state
+       )
+       when id == user_id,
+       do: state
+
+  defp handle_data(
+         %{
+           "op" => 0,
+           "s" => seq,
+           "t" => "MESSAGE_CREATE",
+           "d" =>
+             %{
+               "author" => %{"username" => username, "id" => id},
+               "content" => content,
+               "channel_id" => channel_id
+             } = data
          } = message,
-         state
+         %{client: client, user_id: user_id, messages: messages} = state
        ) do
     Logger.info("#{username}: #{content}")
-    %{state | sequence_number: seq}
+    message = Lobber.Agent.prompt(messages, content)
+    %{"content" => content} = message
+    send_message(client, channel_id, content)
+    %{state | sequence_number: seq, messages: messages ++ [message]}
   end
 
   defp handle_data(
@@ -278,7 +299,6 @@ defmodule Lobber.Discord do
          state
        ) do
     Logger.info("Message type #{type}")
-    IO.inspect(data)
 
     %{state | sequence_number: seq}
   end
@@ -359,5 +379,18 @@ defmodule Lobber.Discord do
     next_hb = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, next_hb)
     %{state | heartbeat_acknowledged: true}
+  end
+
+  defp send_message(client, channel_id, message) do
+    {:ok, body} =
+      Jason.encode(%{
+        content: message
+      })
+
+    Tesla.post(
+      client,
+      "/api/v10/channels/#{channel_id}/messages",
+      body
+    )
   end
 end
