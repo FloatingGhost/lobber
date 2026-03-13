@@ -2,7 +2,7 @@ defmodule Lobber.Agent do
   require Logger
 
   @openrouter "https://openrouter.ai"
-  @model "x-ai/grok-4.20-beta"
+  @model "deepseek/deepseek-v3.2"
 
   defp api_key do
     Application.get_env(:lobber, :api_key)
