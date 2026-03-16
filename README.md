@@ -1,21 +1,15 @@
 # Lobber
+## Lobot O. Mite
 
-**TODO: Add description**
+It's a claw that has been lobotmised. All the useful framework that these \*claw-likes do but without
+the infinite security nightmare.
 
-## Installation
+It's a little elixir process that communicates over discord (or others if you want) and does things for you,
+whilst not being weird about it.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `lobber` to your list of dependencies in `mix.exs`:
+It is very cute, says things like
+> Lobber not like BEEEEEEP.
+> Lobber say hello! Lobber have add tool. Need more tool? Lobber can get.
+> Lobber try add text tool. Text tool not exist. Lobber not know what to do.
 
-```elixir
-def deps do
-  [
-    {:lobber, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/lobber>.
-
+we love lobber
