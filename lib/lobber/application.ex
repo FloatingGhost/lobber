@@ -7,7 +7,7 @@ defmodule Lobber.Application do
     Logger.info("Starting supervision")
 
     children = [
-      {Lobber.Discord, []}
+      {Lobber.Discord.Socket, []}
     ]
 
     opts = [strategy: :one_for_one, name: Lobber.Supervisor]

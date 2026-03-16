@@ -1,24 +1,11 @@
-defmodule Lobber.Discord do
+defmodule Lobber.Discord.Socket do
   use GenServer
   require Logger
 
+  alias Lobber.Discord.DiscordMessage
+
   @discord "https://discord.com"
   @heartbeat_ack_timeout 10_000
-
-  @opcodes %{
-    dispatch: 0,
-    heartbeat: 1,
-    identify: 2,
-    presence: 3,
-    voice_state: 4,
-    resume: 6,
-    reconnect: 7,
-    request_guild_members: 8,
-    invalid_session: 9,
-    hello: 10,
-    heartbeat_ACK: 11,
-    request_soundboard_sounds: 31
-  }
 
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
@@ -26,25 +13,6 @@ defmodule Lobber.Discord do
 
   defp bot_token do
     Application.get_env(:lobber, :discord_bot_token)
-  end
-
-  defp opcode(human) do
-    if Map.has_key?(@opcodes, human) do
-      Map.get(@opcodes, human)
-    else
-      -1
-    end
-  end
-
-  defp human(opcode) do
-    h = Enum.find(@opcodes, fn {k, v} -> v == opcode end)
-
-    if is_nil(h) do
-      "Unknown Opcode"
-    else
-      {k, _} = h
-      k
-    end
   end
 
   defp headers do
@@ -62,7 +30,8 @@ defmodule Lobber.Discord do
       Tesla.client([
         {Tesla.Middleware.BaseUrl, @discord},
         {Tesla.Middleware.Headers, [{"content-type", "application/json"} | headers()]},
-        Tesla.Middleware.JSON
+        Tesla.Middleware.JSON,
+        {Tesla.Middleware.Timeout, timeout: 10_000}
       ])
 
     %{"url" => websock_url} = Tesla.get!(client, "/api/gateway/bot").body
@@ -137,7 +106,13 @@ defmodule Lobber.Discord do
         } = state
       ) do
     Logger.info("Sending heartbeat #{seq}")
-    {:ok, hb_frame} = Jason.encode(%{"op" => opcode(:heartbeat), "d" => seq})
+
+    {:ok, hb_frame} =
+      %DiscordMessage{
+        opcode: :heartbeat,
+        data: seq
+      }
+      |> DiscordMessage.encode()
 
     :ok = :gun.ws_send(conn, websocket_ref, {:text, hb_frame})
     {:noreply, %{state | heartbeat_acknowledged: false}}
@@ -200,66 +175,58 @@ defmodule Lobber.Discord do
   end
 
   defp handle_frame({:text, frame}, state) do
-    {:ok, data} = Jason.decode(frame)
-    %{"op" => op} = data
-    Logger.info("Recieved #{human(op)} message")
-    handle_data(data, state)
+    message =
+      frame
+      |> DiscordMessage.decode()
+
+    state = handle_sequence(message, state)
+
+    handle_data(message, state)
   end
 
+  defp handle_sequence(%DiscordMessage{sequence_number: s}, state) when not is_nil(s) do
+    %{state | sequence_number: s}
+  end
+
+  defp handle_sequence(_, state), do: state
+
   defp handle_data(
-         %{
-           "op" => 0,
-           "s" => seq,
-           "t" => "READY",
-           "d" => %{"user" => %{"username" => username, "id" => id}}
+         %DiscordMessage{
+           opcode: :dispatch,
+           type: "READY",
+           data: %{"user" => %{"username" => username, "id" => id}}
          } = message,
          state
        ) do
-    Logger.info("Discord is ready, hello #{username} (seq: #{seq})!")
+    Logger.info("Discord is ready, hello #{username}!")
 
-    %{
-      "d" => %{
+    %DiscordMessage{
+      data: %{
         "resume_gateway_url" => resume_url,
         "session_id" => session_id
       }
     } = message
 
-    %{state | sequence_number: seq, resume_url: resume_url, session_id: session_id, user_id: id}
+    %{state | resume_url: resume_url, session_id: session_id, user_id: id}
   end
 
   defp handle_data(
-         %{
-           "op" => 0,
-           "s" => seq,
-           "t" => "RESUMED"
+         %DiscordMessage{
+           opcode: :dispatch,
+           type: "RESUMED"
          },
          state
        ) do
-    Logger.info("Discord resumed (seq: #{seq})!")
+    Logger.info("Discord resumed!")
 
-    %{state | sequence_number: seq}
+    state
   end
 
   defp handle_data(
-         %{
-           "op" => 0,
-           "s" => seq,
-           "t" => "GUILD_CREATE",
-           "d" => data
-         } = message,
-         state
-       ) do
-    Logger.info("GUILD_CREATE")
-    IO.inspect(data, limit: :infinity)
-
-    %{state | sequence_number: seq}
-  end
-
-  defp handle_data(
-         %{
-           "op" => 0,
-           "t" => "MESSAGE_CREATE",
-           "d" => %{
+         %DiscordMessage{
+           opcode: :dispatch,
+           type: "MESSAGE_CREATE",
+           data: %{
              "author" => %{"id" => id}
            }
          },
@@ -270,10 +237,9 @@ defmodule Lobber.Discord do
 
   defp handle_data(
          %{
-           "op" => 0,
-           "s" => seq,
-           "t" => "MESSAGE_CREATE",
-           "d" =>
+           opcode: :dispatch,
+           type: "MESSAGE_CREATE",
+           data:
              %{
                "author" => %{"username" => username, "id" => id},
                "content" => content,
@@ -283,94 +249,79 @@ defmodule Lobber.Discord do
          %{client: client, user_id: user_id, messages: messages} = state
        ) do
     Logger.info("#{username}: #{content}")
-    message = Lobber.Agent.prompt(messages, content)
+    message = Lobber.Provider.prompt(messages, content)
     %{"content" => content} = message
     send_message(client, channel_id, content)
-    %{state | sequence_number: seq, messages: messages ++ [message]}
+    %{state | messages: messages ++ [message]}
   end
 
   defp handle_data(
-         %{
-           "op" => 0,
-           "s" => seq,
-           "t" => type,
-           "d" => data
-         },
-         state
-       ) do
-    Logger.info("Message type #{type}")
-
-    %{state | sequence_number: seq}
-  end
-
-  defp handle_data(
-         %{
-           "op" => 10,
-           "s" => sequence_number,
-           "d" => %{
+         %DiscordMessage{
+           opcode: :hello,
+           data: %{
              "heartbeat_interval" => heartbeat
            }
          },
          state
        ) do
-    Logger.info("HELLO recieved! Interval #{heartbeat}, seq: #{sequence_number}")
+    Logger.info("HELLO recieved! Interval #{heartbeat}")
     hb_in = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, hb_in)
 
     # now we've been welcomed, we need to identify ourselves
     if is_nil(state.session_id) do
       {:ok, handshake_frame} =
-        Jason.encode(%{
-          "op" => opcode(:identify),
-          "d" => %{
-            "token" => bot_token(),
-            "properties" => %{
-              "os" => "Linux",
-              "browser" => "YuiBot",
-              "device" => "YuiBot"
+        %DiscordMessage{
+          opcode: :identify,
+          data: %{
+            token: bot_token(),
+            properties: %{
+              os: "Linux",
+              browser: "YuiBot",
+              device: "YuiBot"
             },
-            "presence" => %{
-              "activities" => [],
-              "status" => "online"
+            presence: %{
+              activities: [],
+              status: "online"
             },
-            "intents" => 4096
+            intents: 4096
           }
-        })
+        }
+        |> DiscordMessage.encode()
 
       :ok = :gun.ws_send(state.conn, state.ref, {:text, handshake_frame})
 
       %{
         state
-        | heartbeat_interval: heartbeat,
-          sequence_number: sequence_number
+        | heartbeat_interval: heartbeat
       }
     else
       # resume time
       Logger.info("Resuming session")
 
       {:ok, resume_frame} =
-        Jason.encode(%{
-          "op" => opcode(:resume),
-          "d" => %{
-            "token" => bot_token(),
-            "session_id" => state.session_id,
-            "seq" => state.sequence_number
+        %DiscordMessage{
+          opcode: :resume,
+          data: %{
+            token: bot_token(),
+            session_id: state.session_id,
+            seq: state.sequence_number
           }
-        })
+        }
+        |> DiscordMessage.encode()
 
       :ok = :gun.ws_send(state.conn, state.ref, {:text, resume_frame})
 
       %{
         state
-        | heartbeat_interval: heartbeat,
-          sequence_number: sequence_number
+        | heartbeat_interval: heartbeat
       }
     end
   end
 
   defp handle_data(
-         %{
-           "op" => 11
+         %DiscordMessage{
+           opcode: :heartbeat_ACK
          },
          %{heartbeat_interval: heartbeat} = state
        ) do
