@@ -1,7 +1,7 @@
 # Lobber
 ## Lobot O. Mite
 
-It's a claw that has been lobotmised. All the useful framework that these \*claw-likes do but without
+It's a claw that has been lobotomised. All the useful framework that these \*claw-likes do but without
 the infinite security nightmare.
 
 It's a little elixir process that communicates over discord (or others if you want) and does things for you,

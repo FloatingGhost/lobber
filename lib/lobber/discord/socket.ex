@@ -250,7 +250,7 @@ defmodule Lobber.Discord.Socket do
        ) do
     Logger.info("#{username}: #{content}")
     message = Lobber.Provider.prompt(messages, content)
-    %{"content" => content} = message
+    %Lobber.Conversation.Message{content: content} = message
     send_message(client, channel_id, content)
     %{state | messages: messages ++ [message]}
   end

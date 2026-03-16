@@ -1,0 +1,22 @@
+defmodule Lobber.Tools.Remember do
+  @behaviour Lobber.Tool.Behaviour
+
+  def name(), do: "remember"
+
+  def description(),
+    do:
+      "Remember something. Call this with the total contents of your new memories, including the ones
+  you read earlier, along with your new memory."
+
+  def parameters(),
+    do: %{
+      content: %{
+        type: "string"
+      }
+    }
+
+  def run(%{"content" => content}) do
+    :ok = Lobber.Soul.remember(content)
+    {:string, "Your memories have been saved"}
+  end
+end

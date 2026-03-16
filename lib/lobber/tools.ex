@@ -2,7 +2,7 @@ defmodule Lobber.Tools do
   def list() do
     [
       Lobber.Tools.AddTool,
-      Lobber.Tools.Text,
+      Lobber.Tools.Remember
     ]
   end
 
@@ -25,10 +25,7 @@ defmodule Lobber.Tools do
     |> Enum.find(fn mod -> mod.name() == name end)
   end
 
-  def run(name, args) when is_binary(args) do
-    case Jason.decode(args) do
-      {:ok, args} -> by_name(name).run(args)
-      _ -> :error
-    end
+  def run(%Lobber.Conversation.ToolCall{} = call) do
+    by_name(call.name).run(call.arguments)
   end
 end

@@ -5,5 +5,5 @@ defmodule Lobber.Tool.Behaviour do
 
   @callback parameters() :: term | nil
 
-  @callback run() :: {:add_tool, atom} | {:string, string}
+  @callback run(map()) :: {:add_tool, atom} | {:string, string}
 end
