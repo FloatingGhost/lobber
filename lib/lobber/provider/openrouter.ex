@@ -51,29 +51,26 @@ defmodule Lobber.Provider.OpenRouter do
 
   def prompt(history, user_prompt, tools)
       when is_binary(user_prompt) do
-    {:ok, messages} =
-      Jason.encode(%{
-        messages:
-          Conversation.add_message(history, %Conversation.Message{
-            role: "user",
-            content: user_prompt
-          }),
-        model: model(),
-        tools: Lobber.Tools.format(tools)
-      })
+    message = %Conversation.Message{
+      role: "user",
+      content: user_prompt
+    }
 
-    IO.inspect(messages)
-    Tesla.post(client(), "/api/v1/chat/completions", messages)
-    |> handle_resp(history, tools)
+    prompt(history, message)
   end
 
-  def prompt(history, %Conversation.Message{tool_call_id: _} = s, tools) do
+  def prompt(history, %Conversation.Message{} = s, tools) do
     history = Conversation.add_message(history, s)
 
     {:ok, messages} =
       Jason.encode(%{
         messages: history,
         model: model(),
+        provider: %{
+          sort: %{
+            by: "throughput"
+          }
+        },
         tools: Lobber.Tools.format(tools)
       })
 

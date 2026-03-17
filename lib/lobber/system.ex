@@ -6,7 +6,7 @@ defmodule Lobber.System do
 
   def system_prompt() do
     built_in = File.read!("priv/SYSTEM.md")
-    memories = Lobber.Soul.format_for_prompt()
+    memories = Lobber.Cave.format_for_prompt()
 
     "#{built_in}
     #{memories}"

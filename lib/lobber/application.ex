@@ -6,7 +6,7 @@ defmodule Lobber.Application do
   def start(_type, _args) do
     Logger.info("Starting supervision")
 
-    Lobber.Soul.ensure()
+    Lobber.Cave.ensure()
 
     Lobber.System.system_prompt() |> IO.inspect()
 
