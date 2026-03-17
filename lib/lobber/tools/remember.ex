@@ -16,7 +16,7 @@ defmodule Lobber.Tools.Remember do
     }
 
   def run(%{"content" => content}) do
-    :ok = Lobber.Soul.remember(content)
+    :ok = Lobber.Cave.remember(content)
     {:string, "Your memories have been saved"}
   end
 end

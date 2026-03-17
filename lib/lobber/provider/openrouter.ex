@@ -82,7 +82,7 @@ defmodule Lobber.Provider.OpenRouter do
     handle_message(history, choice, tools)
   end
 
-  defp handle_resp({:ok, %Tesla.Env{status: 400, body: body}}) do
+  defp handle_resp({:ok, %Tesla.Env{status: 400, body: body}}, _, _) do
     IO.inspect(body)
     :error
   end
