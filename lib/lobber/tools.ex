@@ -2,8 +2,15 @@ defmodule Lobber.Tools do
   def list() do
     [
       Lobber.Tools.AddTool,
-      Lobber.Tools.Remember
+      Lobber.Tools.Remember,
+      Lobber.Tools.Store
     ]
+  end
+
+  def as_text() do
+    list()
+    |> Enum.map(fn mod -> "TOOL #{mod.name()} - #{mod.description()}" end)
+    |> Enum.join("\n")
   end
 
   def format(tools) do

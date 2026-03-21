@@ -23,6 +23,8 @@ defmodule Lobber.Provider.OpenRouter do
 
   def client do
     Tesla.client([
+      Tesla.Middleware.Logger,
+      {Tesla.Middleware.Retry, delay: 500, max_retries: 5, max_delay: 4_000},
       {Tesla.Middleware.Timeout, timeout: :infinity},
       {Tesla.Middleware.BaseUrl, @openrouter},
       {Tesla.Middleware.Headers, headers()},
@@ -111,8 +113,16 @@ defmodule Lobber.Provider.OpenRouter do
 
     Logger.info("Running #{tool_use.name}(#{Jason.encode!(tool_use.arguments)})")
 
-    Lobber.Tools.run(tool_use)
-    |> handle_tool_output(tool_use.id, history, tools)
+    try do
+      Lobber.Tools.run(tool_use)
+      |> handle_tool_output(tool_use.id, history, tools)
+    rescue
+      e ->
+        IO.inspect(e)
+        {:string,
+         "The #{tool_use.name} failed to run. You provided the following arguments: #{Jason.encode!(tool_use.arguments)}"}
+        |> handle_tool_output(tool_use.id, history, tools)
+    end
   end
 
   defp handle_tool_output({:string, string}, tool_call_id, messages, tools)

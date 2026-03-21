@@ -3,9 +3,12 @@ defmodule Lobber.Tools.AddTool do
 
   def name(), do: "add_tool"
 
-  def description(), do: "Add a tool to your context.
+  def description(), do: """
+  Add a tool to your context.
   If you do not currently have access to a tool you require for your current task, you should call this tool with
-  the name of the tool you want access to."
+  the name of the tool you want access to.
+  For example, add_tool(name=tool_name)
+  """
 
   def parameters(),
     do: %{

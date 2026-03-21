@@ -8,6 +8,7 @@ defmodule Lobber.Cave do
   require Logger
 
   @memories "THINKS.md"
+  @store "shiny_things"
 
   defp cave() do
     Application.get_env(:lobber, :cave)
@@ -25,6 +26,12 @@ defmodule Lobber.Cave do
     end
   end
 
+  defp ensure_store() do
+    unless File.exists?(file_path(@store)) do
+      File.mkdir(file_path(@store))
+    end
+  end
+
   defp ensure_memories() do
     unless File.exists?(file_path(@memories)) do
       :ok = File.cp("priv/cave/THINKS.md", file_path(@memories))
@@ -35,6 +42,7 @@ defmodule Lobber.Cave do
     Logger.info("Checking lobber cave...")
     ensure_cave()
     ensure_memories()
+    ensure_store()
   end
 
   def format_for_prompt() do
@@ -50,5 +58,17 @@ defmodule Lobber.Cave do
 
   def remember(content) do
     File.write(file_path(@memories), content)
+  end
+
+  def store(file_name, content) do
+    path =
+      cave()
+      |> Path.join(@store)
+      |> Path.join(file_name)
+
+    Logger.info("Storing in #{path}")
+
+    {:ok, path} = Path.safe_relative(path, cave())
+    File.write(path, content)
   end
 end
