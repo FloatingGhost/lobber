@@ -21,32 +21,34 @@ graph TD
   subgraph Channels
         DS[Discord Socket] --> DC[Discord Channel]
         O[Other Channel]
-    end
-    
-    subgraph Conversations
-        DC -->|get_or_spawn| CONVS[Conversations Supervisor]
-        CONVS -->|spawns| C1[Conversation discord:123]
-        CONVS -->|spawns| C2[Conversation discord:456]
+  end
 
-        DC --> |add_message| C1
-    end
+  subgraph Conversations
+    DC -->|get_or_spawn| CONVS[Conversations Supervisor]
+    CONVS -->|spawns| C1[Conversation discord:123]
+    CONVS -->|spawns| C2[Conversation discord:456]
 
-    subgraph Agent
-        ASV[Agent Supervisor]
-        ASV --> |spawns|AT[Agent Task]
+    DC --> |add_message| C1
+    C1 --> DC
+    DC --> DS
+  end
 
-        AT --> C1
+  subgraph Agent
+    ASV[Agent Supervisor]
+    ASV --> |spawns|AT[Agent Task]
 
-        C1 --> |prompt| ASV
-    end
+    AT --> C1
 
-    subgraph Provider
-      DL[Delegation]
+    C1 --> |prompt| ASV
+  end
 
-      OR[OpenRouter]
+  subgraph Provider
+    DL[Delegation]
 
-      DL --> OR
-    end
+    OR[OpenRouter]
 
-    AT --> DL
+    DL --> OR
+  end
+
+  AT --> DL
 ```
