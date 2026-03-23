@@ -1,8 +1,12 @@
 defmodule Lobber.Discord.Socket do
   use GenServer
+
   require Logger
 
   alias Lobber.Discord.DiscordMessage
+  alias Lobber.Conversation
+
+  @behaviour Lobber.Channel.Behaviour
 
   @discord "https://discord.com"
   @heartbeat_ack_timeout 10_000
@@ -10,6 +14,9 @@ defmodule Lobber.Discord.Socket do
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
+
+  @impl true
+  def name(), do: "discord"
 
   defp bot_token do
     Application.get_env(:lobber, :discord_bot_token)
@@ -57,8 +64,7 @@ defmodule Lobber.Discord.Socket do
        heartbeat_acknowledged: true,
        session_id: nil,
        client: client,
-       user_id: nil,
-       messages: []
+       user_id: nil
      }}
   end
 
@@ -246,13 +252,19 @@ defmodule Lobber.Discord.Socket do
                "channel_id" => channel_id
              } = data
          } = message,
-         %{client: client, user_id: user_id, messages: messages} = state
+         %{client: client, user_id: user_id} = state
        ) do
     Logger.info("#{username}: #{content}")
-    message = Lobber.Provider.prompt(messages, content)
-    %Lobber.Conversation.Message{content: content} = message
-    send_message(client, channel_id, content)
-    %{state | messages: messages ++ [message]}
+    conversation = Lobber.Conversations.get_or_spawn(name(), channel_id)
+
+    Lobber.Conversation.add_message(
+      conversation,
+      self(),
+      content,
+      %{channel_id: channel_id}
+    )
+
+    state
   end
 
   defp handle_data(
@@ -330,6 +342,14 @@ defmodule Lobber.Discord.Socket do
     next_hb = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, next_hb)
     %{state | heartbeat_acknowledged: true}
+  end
+
+  def handle_cast(
+        {:conversation_response, %Conversation.Message{} = message, %{channel_id: channel_id}},
+        %{client: client} = state
+      ) do
+    send_message(client, channel_id, message.content)
+    {:noreply, state}
   end
 
   defp send_message(client, channel_id, message) do

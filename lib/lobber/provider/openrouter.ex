@@ -32,37 +32,8 @@ defmodule Lobber.Provider.OpenRouter do
     ])
   end
 
-  def prompt([], user_prompt, tools) when is_binary(user_prompt) do
-    prompt(
-      [
-        %Conversation.Message{
-          role: "system",
-          content: Lobber.System.system_prompt()
-        }
-      ],
-      user_prompt,
-      tools
-    )
-  end
-
-  def prompt(
-        history,
-        user_prompt,
-        tools \\ [Lobber.Tools.AddTool, Lobber.Tools.Remember]
-      )
-
-  def prompt(history, user_prompt, tools)
-      when is_binary(user_prompt) do
-    message = %Conversation.Message{
-      role: "user",
-      content: user_prompt
-    }
-
-    prompt(history, message)
-  end
-
   def prompt(history, %Conversation.Message{} = s, tools) do
-    history = Conversation.add_message(history, s)
+    history = Conversation.concat_messages(history, s)
 
     {:ok, messages} =
       Jason.encode(%{
@@ -77,6 +48,7 @@ defmodule Lobber.Provider.OpenRouter do
       })
 
     IO
+
     Tesla.post(client(), "/api/v1/chat/completions", messages)
     |> handle_resp(history, tools)
   end
@@ -109,61 +81,9 @@ defmodule Lobber.Provider.OpenRouter do
          tools
        ) do
     message = Conversation.Message.decode(message)
-    history = Conversation.add_message(history, message)
+    history = Conversation.concat_messages(history, message)
     [tool_use] = message.tool_calls
 
-    Logger.info("Running #{tool_use.name}(#{Jason.encode!(tool_use.arguments)})")
-
-    try do
-      Lobber.Tools.run(tool_use)
-      |> handle_tool_output(tool_use.id, history, tools)
-    rescue
-      e ->
-        IO.inspect(e)
-        {:string,
-         "The #{tool_use.name} failed to run. You provided the following arguments: #{Jason.encode!(tool_use.arguments)}"}
-        |> handle_tool_output(tool_use.id, history, tools)
-    end
-  end
-
-  defp handle_tool_output({:string, string}, tool_call_id, messages, tools)
-       when is_binary(string) do
-    tool_use = %Conversation.Message{
-      role: "tool",
-      tool_call_id: tool_call_id,
-      content: string
-    }
-
-    prompt(messages, tool_use, tools)
-  end
-
-  defp handle_tool_output({:add_tool, tool_name}, tool_call_id, messages, tools)
-       when is_binary(tool_name) do
-    to_add = Lobber.Tools.by_name(tool_name)
-
-    response =
-      if is_nil(to_add) do
-        "The tool #{tool_name} doesn't exist!"
-      else
-        "The tool has been added to your context. You can use it now."
-      end
-
-    tools =
-      if is_nil(to_add) do
-        tools
-      else
-        [to_add | tools]
-      end
-      |> Enum.uniq()
-
-    tool_use = %Conversation.Message{
-      role: "tool",
-      tool_call_id: tool_call_id,
-      content: response
-    }
-
-    IO.inspect(tools)
-
-    prompt(messages, tool_use, tools)
+    {:tool, tool_use}
   end
 end

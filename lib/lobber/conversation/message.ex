@@ -32,18 +32,20 @@ defmodule Lobber.Conversation.Message do
       }) do
     %{
       "role" => role,
-      "content" => content,
+      "content" => content
     }
     |> maybe_put_tool_calls(tool_calls)
     |> maybe_put_tool_call_id(tool_call_id)
   end
 
   defp maybe_put_tool_calls(map, []), do: map
+
   defp maybe_put_tool_calls(map, tool_calls) do
     Map.put(map, "tool_calls", Enum.map(tool_calls, &Lobber.Conversation.ToolCall.encode/1))
   end
 
   defp maybe_put_tool_call_id(map, nil), do: map
+
   defp maybe_put_tool_call_id(map, tool_call_id) do
     Map.put(map, "tool_call_id", tool_call_id)
   end

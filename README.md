@@ -13,3 +13,40 @@ It is very cute, says things like
 > Lobber try add text tool. Text tool not exist. Lobber not know what to do.
 
 we love lobber
+
+## Lobber's design
+
+```mermaid
+graph TD
+  subgraph Channels
+        DS[Discord Socket] --> DC[Discord Channel]
+        O[Other Channel]
+    end
+    
+    subgraph Conversations
+        DC -->|get_or_spawn| CONVS[Conversations Supervisor]
+        CONVS -->|spawns| C1[Conversation discord:123]
+        CONVS -->|spawns| C2[Conversation discord:456]
+
+        DC --> |add_message| C1
+    end
+
+    subgraph Agent
+        ASV[Agent Supervisor]
+        ASV --> |spawns|AT[Agent Task]
+
+        AT --> C1
+
+        C1 --> |prompt| ASV
+    end
+
+    subgraph Provider
+      DL[Delegation]
+
+      OR[OpenRouter]
+
+      DL --> OR
+    end
+
+    AT --> DL
+```

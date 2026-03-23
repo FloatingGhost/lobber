@@ -11,7 +11,13 @@ defmodule Lobber.Application do
     Lobber.System.system_prompt() |> IO.inspect()
 
     children = [
-      {Lobber.Discord.Socket, []}
+      {Registry, [keys: :unique, name: Lobber.Conversations.registry()]},
+      {Task.Supervisor, name: Lobber.Agent.supervisor()},
+      {Lobber.Channels,
+       [
+         {Lobber.Discord.Socket, []}
+       ]},
+      {Lobber.Conversations, []}
     ]
 
     opts = [strategy: :one_for_one, name: Lobber.Supervisor]
