@@ -47,8 +47,6 @@ defmodule Lobber.Provider.OpenRouter do
         tools: Lobber.Tools.format(tools)
       })
 
-    IO
-
     Tesla.post(client(), "/api/v1/chat/completions", messages)
     |> handle_resp(history, tools)
   end

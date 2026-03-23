@@ -8,8 +8,6 @@ defmodule Lobber.Application do
 
     Lobber.Cave.ensure()
 
-    Lobber.System.system_prompt() |> IO.inspect()
-
     children = [
       {Registry, [keys: :unique, name: Lobber.Conversations.registry()]},
       {Task.Supervisor, name: Lobber.Agent.supervisor()},

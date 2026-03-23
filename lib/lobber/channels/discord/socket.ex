@@ -97,7 +97,6 @@ defmodule Lobber.Discord.Socket do
   @impl true
   def handle_info(message, %{status: :upgrading} = state) do
     Logger.error("Unexpected upgrade message")
-    IO.inspect(message)
     {:stop, state}
   end
 
