@@ -1,0 +1,28 @@
+@startuml
+skinparam linetype ortho
+
+component Discord {
+  port send_message
+}
+
+Websocket --> Discord
+  
+node Conversations {
+  port handle_message
+  port respond
+  component "Conversation channel:id"
+}
+
+Discord --> handle_message
+
+component Provider {
+    port prompt
+}
+
+Conversations --> prompt : async
+Provider --> respond : async, callback from Conversation
+Conversations --> send_message
+
+@enduml
+
+

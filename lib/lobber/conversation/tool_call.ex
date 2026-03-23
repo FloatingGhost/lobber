@@ -16,11 +16,12 @@ defmodule Lobber.Conversation.ToolCall do
         name: name,
         arguments: arguments
       }) do
+      {:ok, args} = Jason.encode(arguments)
     %{
       "id" => id,
       "function" => %{
         "name" => name,
-        "arguments" => arguments
+        "arguments" => args
       }
     }
   end

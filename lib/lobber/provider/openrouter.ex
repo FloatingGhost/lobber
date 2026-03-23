@@ -76,6 +76,7 @@ defmodule Lobber.Provider.OpenRouter do
         tools: Lobber.Tools.format(tools)
       })
 
+    IO
     Tesla.post(client(), "/api/v1/chat/completions", messages)
     |> handle_resp(history, tools)
   end
@@ -153,6 +154,7 @@ defmodule Lobber.Provider.OpenRouter do
       else
         [to_add | tools]
       end
+      |> Enum.uniq()
 
     tool_use = %Conversation.Message{
       role: "tool",
