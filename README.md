@@ -19,8 +19,8 @@ we love lobber
 ```mermaid
 graph TD
   subgraph Channels
-        DS[Discord Socket] --> DC[Discord Channel]
-        O[Other Channel]
+    DS[Discord Socket] --> DC[Discord Channel]
+    O[Other Channel]
   end
 
   subgraph Conversations
@@ -29,8 +29,7 @@ graph TD
     CONVS -->|spawns| C2[Conversation discord:456]
 
     DC --> |add_message| C1
-    C1 --> DC
-    DC --> DS
+    C1 --> |send_response| DC
   end
 
   subgraph Agent
