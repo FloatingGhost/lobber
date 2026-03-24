@@ -1,36 +1,21 @@
-defmodule Lobber.Discord.Socket do
+defmodule Lobber.Channels.Discord.Socket do
   use GenServer
 
   require Logger
 
-  alias Lobber.Discord.DiscordMessage
+  alias Lobber.Channels.Discord.DiscordMessage
   alias Lobber.Conversation
-
-  @behaviour Lobber.Channel.Behaviour
 
   @discord "https://discord.com"
   @heartbeat_ack_timeout 10_000
 
   def start_link(state) do
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+    {channel_name, state} = Keyword.pop(state, :channel_name)
+    GenServer.start_link(__MODULE__, %{channel_name: channel_name}, name: __MODULE__)
   end
 
   @impl true
-  def name(), do: "discord"
-
-  defp bot_token do
-    Application.get_env(:lobber, :discord_bot_token)
-  end
-
-  defp headers do
-    [
-      {"user-agent", "YuiBot (application 182675940042735616)"},
-      {"authorization", "Bot #{bot_token()}"}
-    ]
-  end
-
-  @impl true
-  def init(_state) do
+  def init(%{channel_name: channel_name}) do
     Logger.info("Starting discord...")
 
     client =
@@ -52,6 +37,7 @@ defmodule Lobber.Discord.Socket do
 
     {:ok,
      %{
+       channel_name: channel_name,
        conn: conn,
        ref: nil,
        status: :connecting,
@@ -66,6 +52,17 @@ defmodule Lobber.Discord.Socket do
        client: client,
        user_id: nil
      }}
+  end
+
+  defp bot_token do
+    Lobber.Config.get(Lobber.Channels.Discord, :bot_token)
+  end
+
+  defp headers do
+    [
+      {"user-agent", "YuiBot (application 182675940042735616)"},
+      {"authorization", "Bot #{bot_token()}"}
+    ]
   end
 
   defp next_heartbeat(interval) do
@@ -173,9 +170,8 @@ defmodule Lobber.Discord.Socket do
   end
 
   def handle_info(other, state) do
-    Logger.info("Weird state!")
-    IO.inspect(other)
-    IO.inspect(state)
+    Logger.warn("Weird state!")
+    Logger.warn("Message: #{inspect(other)}, state: #{inspect(state)}")
     {:noreply, state}
   end
 
@@ -251,10 +247,10 @@ defmodule Lobber.Discord.Socket do
                "channel_id" => channel_id
              } = data
          } = message,
-         %{client: client, user_id: user_id} = state
+         %{client: client, user_id: user_id, channel_name: channel_name} = state
        ) do
     Logger.info("#{username}: #{content}")
-    conversation = Lobber.Conversations.get_or_spawn(name(), channel_id)
+    conversation = Lobber.Conversations.get_or_spawn(channel_name, channel_id)
 
     Lobber.Conversation.add_message(
       conversation,

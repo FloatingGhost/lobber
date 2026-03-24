@@ -6,19 +6,42 @@ defmodule Lobber.Conversation do
 
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name)
-    GenServer.start_link(__MODULE__, opts, name: name)
+    {id, _opts} = Keyword.pop(opts, :id)
+
+    # maybe reload when we start
+    history =
+      Lobber.Cave.read_backup(id)
+      |> maybe_inject_system_prompt()
+
+    GenServer.start_link(
+      __MODULE__,
+      %{
+        history: history,
+        id: id
+      },
+      name: name
+    )
   end
 
   @impl true
-  def init(_state) do
-    {:ok,
-     %{
-       history: []
-     }}
+  def init(state) do
+    {:ok, state}
+  end
+
+  defp maybe_inject_system_prompt([%Message{role: "system"} | _rest] = history),
+    do: history
+
+  defp maybe_inject_system_prompt(history) do
+    system = %Message{
+      role: "system",
+      content: Lobber.System.system_prompt()
+    }
+
+    [system | history]
   end
 
   @impl true
-  def handle_cast({:message, respond_to, message, opts}, %{history: history}) do
+  def handle_cast({:message, respond_to, message, opts}, %{id: id, history: history} = state) do
     Logger.info("Message: #{message}")
 
     message = %Message{
@@ -35,19 +58,28 @@ defmodule Lobber.Conversation do
     # spin off an async task to handle the actual processing
     Lobber.Agent.prompt(self(), history, message, opts)
 
-    {:noreply, %{history: concat_messages(history, message)}}
+    {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
   end
 
   @impl true
-  def handle_cast({:agent_response, %Message{} = message, opts}, state) do
+  def handle_cast(
+        {:agent_response, %Message{} = message, opts},
+        %{id: id, history: history} = state
+      ) do
     %{respond_to: respond_to, channel_opts: channel_opts} = opts
 
     GenServer.cast(respond_to, {:conversation_response, message, channel_opts})
-    {:noreply, %{history: concat_messages(state.history, message)}}
+    {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
   end
 
   def concat_messages(history, %Message{} = next) do
     history ++ [next]
+  end
+
+  defp concat_and_backup_messages(id, history, next) do
+    concat = concat_messages(history, next)
+    Lobber.Cave.backup_conversation(id, concat)
+    concat
   end
 
   # api to conversation

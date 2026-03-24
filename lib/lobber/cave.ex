@@ -9,9 +9,10 @@ defmodule Lobber.Cave do
 
   @memories "THINKS.md"
   @store "shiny_things"
+  @conversations "conversations"
 
   defp cave() do
-    Application.get_env(:lobber, :cave)
+    Lobber.Config.get(:cave)
   end
 
   defp file_path(path) do
@@ -32,6 +33,12 @@ defmodule Lobber.Cave do
     end
   end
 
+  defp ensure_backup() do
+    unless File.exists?(file_path(@conversations)) do
+      File.mkdir(file_path(@conversations))
+    end
+  end
+
   defp ensure_memories() do
     unless File.exists?(file_path(@memories)) do
       :ok = File.cp("priv/cave/THINKS.md", file_path(@memories))
@@ -43,6 +50,7 @@ defmodule Lobber.Cave do
     ensure_cave()
     ensure_memories()
     ensure_store()
+    ensure_backup()
   end
 
   def format_for_prompt() do
@@ -70,5 +78,35 @@ defmodule Lobber.Cave do
 
     {:ok, path} = Path.safe_relative(path, cave())
     File.write(path, content)
+  end
+
+  defp conversation_backup_path(id) do
+    path =
+      cave()
+      |> Path.join(@conversations)
+      |> Path.join("#{id}.json")
+
+    {:ok, path} = Path.safe_relative(path, cave())
+    path
+  end
+
+  def backup_conversation(id, content) do
+    {:ok, data} = Jason.encode(content)
+
+    path = conversation_backup_path(id)
+    File.write(path, data)
+  end
+
+  def read_backup(id) do
+    path = conversation_backup_path(id)
+
+    if File.exists?(path) do
+      {:ok, data} = File.read(path)
+      {:ok, conv} = Jason.decode(data)
+      conv
+    else
+      []
+    end
+    |> Enum.map(&Lobber.Conversation.Message.decode/1)
   end
 end

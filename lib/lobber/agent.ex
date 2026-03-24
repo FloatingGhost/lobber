@@ -69,14 +69,14 @@ defmodule Lobber.Agent do
 
   # maybe the provider has requested we use a tool
   defp handle_provider_response(
-         {:tool, %Lobber.Conversation.ToolCall{} = tool_call},
-         messages,
+         {:tool, %Lobber.Conversation.ToolCall{} = tool_call, history},
+         _messages,
          tools,
          opts
        ) do
     # the provider wants a tool
     Lobber.Tools.run(tool_call)
-    |> handle_tool_output(tool_call.id, messages, tools, opts)
+    |> handle_tool_output(tool_call.id, history, tools, opts)
   end
 
   # then when our tool has been run, we want to send it back to the provider

@@ -8,11 +8,11 @@ defmodule Lobber.Provider.OpenRouter do
   @openrouter "https://openrouter.ai"
 
   defp model do
-    Application.get_env(:lobber, :model_id)
+    Lobber.Config.get(__MODULE__, :model_id)
   end
 
   defp api_key do
-    Application.get_env(:lobber, :openrouter_api_key)
+    Lobber.Config.get(__MODULE__, :api_key)
   end
 
   defp headers do
@@ -56,7 +56,7 @@ defmodule Lobber.Provider.OpenRouter do
   end
 
   defp handle_resp({:ok, %Tesla.Env{status: 400, body: body}}, _, _) do
-    IO.inspect(body)
+    Logger.error("Bad request to openrouter! #{inspect(body)}")
     :error
   end
 
@@ -82,6 +82,6 @@ defmodule Lobber.Provider.OpenRouter do
     history = Conversation.concat_messages(history, message)
     [tool_use] = message.tool_calls
 
-    {:tool, tool_use}
+    {:tool, tool_use, history}
   end
 end

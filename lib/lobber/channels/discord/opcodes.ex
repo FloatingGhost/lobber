@@ -1,4 +1,4 @@
-defmodule Lobber.Discord.Opcodes do
+defmodule Lobber.Channels.Discord.Opcodes do
   @opcodes %{
     dispatch: 0,
     heartbeat: 1,

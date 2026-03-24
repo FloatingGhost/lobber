@@ -7,14 +7,12 @@ defmodule Lobber.Application do
     Logger.info("Starting supervision")
 
     Lobber.Cave.ensure()
+    channels = Lobber.Config.get(:channels)
 
     children = [
       {Registry, [keys: :unique, name: Lobber.Conversations.registry()]},
       {Task.Supervisor, name: Lobber.Agent.supervisor()},
-      {Lobber.Channels,
-       [
-         {Lobber.Discord.Socket, []}
-       ]},
+      {Lobber.Channels, channels},
       {Lobber.Conversations, []}
     ]
 

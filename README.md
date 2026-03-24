@@ -19,17 +19,18 @@ we love lobber
 ```mermaid
 graph TD
   subgraph Channels
-    DS[Discord Socket] --> DC[Discord Channel]
-    O[Other Channel]
+    CSV[Channels Supervisor] --> |spawns|DSV[Discord Supervisor]
+    DSV --> |spawns|DWS[Discord Websocket]
+    CSV[Channels Supervisor] --> |spawns|O[Other Channel]
   end
 
   subgraph Conversations
-    DC -->|get_or_spawn| CONVS[Conversations Supervisor]
+    DWS -->|get_or_spawn| CONVS[Conversations Supervisor]
     CONVS -->|spawns| C1[Conversation discord:123]
     CONVS -->|spawns| C2[Conversation discord:456]
 
-    DC --> |add_message| C1
-    C1 --> |send_response| DC
+    DWS --> |add_message| C1
+    C1 --> |send_response| DWS
   end
 
   subgraph Agent

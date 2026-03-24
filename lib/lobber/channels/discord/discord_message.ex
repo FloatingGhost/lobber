@@ -1,5 +1,5 @@
-defmodule Lobber.Discord.DiscordMessage do
-  alias Lobber.Discord.Opcodes
+defmodule Lobber.Channels.Discord.DiscordMessage do
+  alias Lobber.Channels.Discord.Opcodes
 
   defstruct opcode: nil, data: %{}, sequence_number: nil, type: ""
 

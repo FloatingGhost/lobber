@@ -31,7 +31,7 @@ defmodule Lobber.Conversations do
   defp spawn_new(id) do
     Logger.info("Spawning conversation #{id}")
 
-    spec = {Lobber.Conversation, [name: process_name(id)]}
+    spec = {Lobber.Conversation, [name: process_name(id), id: id]}
 
     case DynamicSupervisor.start_child(__MODULE__, spec) do
       {:ok, pid} ->
@@ -41,7 +41,7 @@ defmodule Lobber.Conversations do
         pid
 
       {:error, err} ->
-        IO.inspect(err)
+        Logger.error("Could not start child! #{inspect(err)}")
         :error
     end
   end

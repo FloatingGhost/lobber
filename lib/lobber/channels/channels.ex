@@ -9,4 +9,7 @@ defmodule Lobber.Channels do
   def init(init_arg) do
     Supervisor.init(init_arg, strategy: :one_for_one)
   end
+
+  @impl true
+  def name(), do: "discord"
 end

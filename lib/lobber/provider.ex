@@ -1,6 +1,11 @@
 defmodule Lobber.Provider do
-  @provider Application.compile_env(:lobber, :provider, nil)
   @behaviour Lobber.Provider.Behaviour
 
-  defdelegate prompt(conversation, next_message, tools), to: @provider
+  defp provider() do
+    Lobber.Config.get(:provider)
+  end
+
+  def prompt(conversation, next_message, tools) do
+    provider().prompt(conversation, next_message, tools)
+  end
 end
