@@ -1,0 +1,15 @@
+[Unit]
+Description=Lobber
+After=network.target
+
+[Service]
+Type=simple
+User=lobber
+WorkingDirectory=/opt/lobber
+ExecStart=/opt/lobber/bin/lobber start
+ExecStop=/opt/lobber/bin/lobber stop
+Restart=on-failure
+Environment=MIX_ENV=prod
+
+[Install]
+WantedBy=multi-user.target
