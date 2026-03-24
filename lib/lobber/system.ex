@@ -8,12 +8,16 @@ defmodule Lobber.System do
     built_in = File.read!("priv/SYSTEM.md")
     memories = Lobber.Cave.format_for_prompt()
     tools = Lobber.Tools.as_text()
+    skills = Lobber.Skills.format()
     "#{built_in}
 
     #{memories}
 
     You have the following tools available to you:
     #{tools}
+
+    You have the following skills:
+    #{skills}
 
     Remember, you may have to add a tool to your context via add_tool"
   end
