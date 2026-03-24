@@ -5,10 +5,7 @@ defmodule Lobber.Config do
   """
 
   def get(key) do
-    case Application.fetch_env(:lobber, key) do
-      {:ok, value} -> value
-      :error -> nil
-    end
+    Application.fetch_env!(:lobber, key)
   end
 
   def get(key, subkey) do
@@ -16,7 +13,7 @@ defmodule Lobber.Config do
          {:has, true} <- {:has, Keyword.has_key?(value, subkey)} do
       Keyword.get(value, subkey)
     else
-      _ -> {:error, :no_key}
+      _ -> raise "No such config #{key}->#{subkey}"
     end
   end
 end
