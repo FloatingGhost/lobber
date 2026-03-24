@@ -3,7 +3,9 @@ defmodule Lobber.Tools do
     [
       Lobber.Tools.AddTool,
       Lobber.Tools.Remember,
-      Lobber.Tools.Store
+      Lobber.Tools.Store,
+      Lobber.Tools.SearchWeb,
+      Lobber.Tools.SummariseWeb
     ]
   end
 

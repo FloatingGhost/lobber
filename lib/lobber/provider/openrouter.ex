@@ -79,9 +79,8 @@ defmodule Lobber.Provider.OpenRouter do
          tools
        ) do
     message = Conversation.Message.decode(message)
-    history = Conversation.concat_messages(history, message)
     [tool_use] = message.tool_calls
 
-    {:tool, tool_use, history}
+    {:tool, tool_use, history ++ [message]}
   end
 end

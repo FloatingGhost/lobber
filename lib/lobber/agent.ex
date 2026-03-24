@@ -12,7 +12,7 @@ defmodule Lobber.Agent do
   @supervisor Lobber.Agent.Supervisor
   @max_turns 10
 
-  @starting_tools [Lobber.Tools.AddTool, Lobber.Tools.Remember]
+  @starting_tools [Lobber.Tools.AddTool, Lobber.Tools.Remember, Lobber.Tools.SummariseWeb, Lobber.Tools.SearchWeb]
 
   alias Lobber.Conversation
 
@@ -40,7 +40,7 @@ defmodule Lobber.Agent do
 
   def prompt(respond_to, messages, next_message, opts) do
     Task.Supervisor.start_child(supervisor(), fn ->
-      case call_provider(messages, next_message, @starting_tools, %{turns: 0}) do
+      case call_provider(messages, next_message, @starting_tools, %{respond_to: respond_to, turns: 0}) do
         {:ok, text} ->
           GenServer.cast(respond_to, {:agent_response, text, opts})
 
@@ -57,9 +57,9 @@ defmodule Lobber.Agent do
     {:error, :too_many_turns}
   end
 
-  defp call_provider(messages, next_message, tools, %{turns: turns}) do
+  defp call_provider(messages, next_message, tools, %{turns: turns} = opts) do
     Lobber.Provider.prompt(messages, next_message, tools)
-    |> handle_provider_response(messages, tools, %{turns: turns + 1})
+    |> handle_provider_response(messages, tools, %{opts | turns: turns + 1})
   end
 
   # maybe the provider has finished
@@ -72,15 +72,20 @@ defmodule Lobber.Agent do
          {:tool, %Lobber.Conversation.ToolCall{} = tool_call, history},
          _messages,
          tools,
-         opts
+         %{respond_to: respond_to} = opts
        ) do
+
+    last_message = List.last(history)
+
+    GenServer.cast(respond_to, {:intermediate_message, last_message})
+
     # the provider wants a tool
     Lobber.Tools.run(tool_call)
     |> handle_tool_output(tool_call.id, history, tools, opts)
   end
 
   # then when our tool has been run, we want to send it back to the provider
-  defp handle_tool_output({:string, string}, tool_call_id, messages, tools, opts)
+  defp handle_tool_output({:string, string}, tool_call_id, messages, tools, %{respond_to: respond_to} = opts)
        when is_binary(string) do
     tool_use = %Conversation.Message{
       role: "tool",
@@ -88,10 +93,12 @@ defmodule Lobber.Agent do
       content: string
     }
 
+    GenServer.cast(respond_to, {:intermediate_message, tool_use})
+
     call_provider(messages, tool_use, tools, opts)
   end
 
-  defp handle_tool_output({:add_tool, tool_name}, tool_call_id, messages, tools, opts)
+  defp handle_tool_output({:add_tool, tool_name}, tool_call_id, messages, tools, %{respond_to: respond_to} = opts)
        when is_binary(tool_name) do
     to_add = Lobber.Tools.by_name(tool_name)
 
@@ -115,6 +122,8 @@ defmodule Lobber.Agent do
       tool_call_id: tool_call_id,
       content: response
     }
+
+    GenServer.cast(respond_to, {:intermediate_message, tool_use})
 
     call_provider(messages, tool_use, tools, opts)
   end

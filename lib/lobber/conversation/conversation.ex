@@ -72,6 +72,17 @@ defmodule Lobber.Conversation do
     {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
   end
 
+  @impl true
+  def handle_cast(
+    {:intermediate_message, %Message{} = message}, %{id: id, history: history} = state
+  ) do
+    {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
+  end
+
+  def handle_cast(other, state) do
+    IO.inspect(other)
+  end
+
   def concat_messages(history, %Message{} = next) do
     history ++ [next]
   end
