@@ -8,9 +8,11 @@ defmodule Lobber.Tools do
       Tools.Store,
       Tools.SearchWeb,
       Tools.SummariseWeb,
+      Tools.FetchWeb,
       Tools.AddIdentity,
-      Tools.ReplaceIdentity
-    ]
+      Tools.ReplaceIdentity,
+      Tools.ProposeTool
+    ] ++ Lobber.Cave.custom_tools()
   end
 
   def as_text() do

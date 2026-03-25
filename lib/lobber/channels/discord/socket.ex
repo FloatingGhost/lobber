@@ -257,6 +257,16 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   defp handle_data(
+         %{
+           opcode: :dispatch,
+           type: "MESSAGE_UPDATE"
+         } = message,
+         state
+       ) do
+    {:noreply, state}
+  end
+
+  defp handle_data(
          %DiscordMessage{
            opcode: :hello,
            data: %{

@@ -17,8 +17,10 @@ defmodule Lobber.Agent do
     Lobber.Tools.Remember,
     Lobber.Tools.SummariseWeb,
     Lobber.Tools.SearchWeb,
+    Lobber.Tools.FetchWeb,
     Lobber.Tools.AddIdentity,
-    Lobber.Tools.ReplaceIdentity
+    Lobber.Tools.ReplaceIdentity,
+    Lobber.Tools.ProposeTool
   ]
 
   alias Lobber.Conversation

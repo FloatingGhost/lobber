@@ -11,6 +11,7 @@ defmodule Lobber.Cave do
   @store "shiny_things"
   @conversations "conversations"
   @identity "IDENTITY.md"
+  @tools "tools"
 
   defp cave() do
     Lobber.Config.get(:cave)
@@ -40,6 +41,42 @@ defmodule Lobber.Cave do
     end
   end
 
+  defp ensure_tools() do
+    unless File.exists?(file_path(@tools)) do
+      File.mkdir(file_path(@tools))
+    end
+  end
+
+  def custom_tools() do
+    {:ok, tools, _} =
+      @tools
+      |> file_path()
+      |> File.ls!()
+      |> Enum.map(fn path ->
+        @tools
+        |> file_path()
+        |> Path.join(path)
+      end)
+      |> Kernel.ParallelCompiler.compile()
+      |> IO.inspect()
+
+    tools
+  end
+
+  def promote_tool(name) do
+    fname = "tool-proposal-#{name}.ex"
+
+    tool_fname =
+      @tools
+      |> file_path()
+      |> Path.join(fname)
+
+    @store
+    |> file_path()
+    |> Path.join(fname)
+    |> File.cp(tool_fname)
+  end
+
   defp ensure_memories() do
     unless File.exists?(file_path(@memories)) do
       :ok =
@@ -63,6 +100,7 @@ defmodule Lobber.Cave do
     ensure_store()
     ensure_backup()
     ensure_identity()
+    ensure_tools()
   end
 
   def format_for_prompt() do
