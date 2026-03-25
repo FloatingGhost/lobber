@@ -13,15 +13,18 @@ defmodule Lobber.Conversation.Message do
     }
   end
 
-  def decode(%{
-        "role" => role,
-        "content" => content
-      }) do
+  def decode(
+        %{
+          "role" => role,
+          "content" => content
+        } = data
+      ) do
     %__MODULE__{
       role: role,
       content: content,
       tool_calls: []
     }
+    |> Map.put(:tool_call_id, Map.get(data, "tool_call_id", nil))
   end
 
   def encode(%__MODULE__{
