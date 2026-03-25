@@ -81,7 +81,7 @@ defmodule Lobber.Agent do
 
   # maybe the provider has requested we use a tool
   defp handle_provider_response(
-         {:tool, %Lobber.Conversation.ToolCall{} = tool_call, history},
+         {:tools, invocations, history},
          _messages,
          tools,
          %{respond_to: respond_to} = opts
@@ -90,16 +90,38 @@ defmodule Lobber.Agent do
 
     GenServer.cast(respond_to, {:intermediate_message, last_message})
 
-    # the provider wants a tool
-    Lobber.Tools.run(tool_call)
-    |> handle_tool_output(tool_call.id, history, tools, opts)
+    # the provider wants a tool(s) run
+    # this can return lots of things, so let's let it mutate the history
+    # tools may also have been added as a byproduct, so we need to reassign that
+    {last_message, history, tools} = run_tools(last_message, history, tools, invocations, opts)
+
+    call_provider(history, last_message, tools, opts)
+  end
+
+  defp run_tools(last_message, history, tools, [], opts) do
+    {last_message, history, tools}
+  end
+
+  defp run_tools(
+         last_message,
+         message_list,
+         tools,
+         [%Lobber.Conversation.ToolCall{} = tool_call | invocations],
+         opts
+       ) do
+    case Lobber.Tools.run(tool_call) |> handle_tool_output(tool_call.id, tools, opts) do
+      {:tool_resp, response} ->
+        run_tools(response, message_list ++ [last_message], tools, invocations, opts)
+
+      {:tool_resp, response, new_tools} ->
+        run_tools(response, message_list ++ [last_message], new_tools, invocations, opts)
+    end
   end
 
   # then when our tool has been run, we want to send it back to the provider
   defp handle_tool_output(
          {:string, string},
          tool_call_id,
-         messages,
          tools,
          %{respond_to: respond_to} = opts
        )
@@ -112,13 +134,12 @@ defmodule Lobber.Agent do
 
     GenServer.cast(respond_to, {:intermediate_message, tool_use})
 
-    call_provider(messages, tool_use, tools, opts)
+    {:tool_resp, tool_use}
   end
 
   defp handle_tool_output(
          {:add_tool, tool_name},
          tool_call_id,
-         messages,
          tools,
          %{respond_to: respond_to} = opts
        )
@@ -148,6 +169,6 @@ defmodule Lobber.Agent do
 
     GenServer.cast(respond_to, {:intermediate_message, tool_use})
 
-    call_provider(messages, tool_use, tools, opts)
+    {:tool_resp, tool_use, tools}
   end
 end

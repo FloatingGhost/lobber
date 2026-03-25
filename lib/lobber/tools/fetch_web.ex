@@ -1,6 +1,8 @@
 defmodule Lobber.Tools.FetchWeb do
   @behaviour Lobber.Tool.Behaviour
 
+  require Logger
+
   def name(), do: "fetch_web"
 
   def description(),

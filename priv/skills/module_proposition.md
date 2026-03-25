@@ -42,3 +42,4 @@ You are then to respond to the user to ask them to review your work before the t
 the user what file you saved and they can promote it for you.
 
 Any custom tools will NOT be loaded by default and you will always have to use `add_tool` to get their schema.
+However, you can `add_tool` in the same call as you want to call it! That is, if you already know the input schema.

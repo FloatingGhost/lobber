@@ -57,7 +57,7 @@ defmodule Lobber.Cave do
         |> file_path()
         |> Path.join(path)
       end)
-      |> Kernel.ParallelCompiler.compile()
+      |> Kernel.ParallelCompiler.compile(return_diagnostics: true)
       |> IO.inspect()
 
     tools
