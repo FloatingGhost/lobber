@@ -40,3 +40,5 @@ If you want to propose a skill. put it in the @moduledoc of the proposed module.
 
 You are then to respond to the user to ask them to review your work before the tool is either accepted or rejected. Tell
 the user what file you saved and they can promote it for you.
+
+Any custom tools will NOT be loaded by default and you will always have to use `add_tool` to get their schema.
