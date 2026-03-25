@@ -16,4 +16,18 @@ defmodule Lobber.Config do
       _ -> raise "No such config #{key}->#{subkey}"
     end
   end
+
+  def read_priv(name) do
+    name
+    |> priv_path()
+    |> File.read!()
+  end
+
+  def priv_path(name) do
+    {:ok, name} = Path.safe_relative(name)
+
+    :code.priv_dir(:lobber)
+    |> to_string()
+    |> Path.join(name)
+  end
 end

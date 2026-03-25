@@ -1,11 +1,15 @@
 defmodule Lobber.Tools do
+  alias Lobber.Tools
+
   def list() do
     [
-      Lobber.Tools.AddTool,
-      Lobber.Tools.Remember,
-      Lobber.Tools.Store,
-      Lobber.Tools.SearchWeb,
-      Lobber.Tools.SummariseWeb
+      Tools.AddTool,
+      Tools.Remember,
+      Tools.Store,
+      Tools.SearchWeb,
+      Tools.SummariseWeb,
+      Tools.AddIdentity,
+      Tools.ReplaceIdentity
     ]
   end
 

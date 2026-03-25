@@ -28,8 +28,10 @@ defmodule Lobber.Conversation do
     {:ok, state}
   end
 
-  defp maybe_inject_system_prompt([%Message{role: "system"} | _rest] = history),
-    do: history
+  defp maybe_inject_system_prompt([%Message{role: "system"} | rest] = history) do
+    # replace prompt with the latest version
+    maybe_inject_system_prompt(rest)
+  end
 
   defp maybe_inject_system_prompt(history) do
     system = %Message{
@@ -74,8 +76,9 @@ defmodule Lobber.Conversation do
 
   @impl true
   def handle_cast(
-    {:intermediate_message, %Message{} = message}, %{id: id, history: history} = state
-  ) do
+        {:intermediate_message, %Message{} = message},
+        %{id: id, history: history} = state
+      ) do
     {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
   end
 

@@ -169,12 +169,6 @@ defmodule Lobber.Channels.Discord.Socket do
     {:noreply, handle_frame(frame, state)}
   end
 
-  def handle_info(other, state) do
-    Logger.warn("Weird state!")
-    Logger.warn("Message: #{inspect(other)}, state: #{inspect(state)}")
-    {:noreply, state}
-  end
-
   defp handle_frame({:text, frame}, state) do
     message =
       frame

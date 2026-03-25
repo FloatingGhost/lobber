@@ -5,7 +5,7 @@ defmodule Lobber.System do
   """
 
   def system_prompt() do
-    built_in = File.read!("priv/SYSTEM.md")
+    built_in = Lobber.Config.read_priv("SYSTEM.md")
     memories = Lobber.Cave.format_for_prompt()
     tools = Lobber.Tools.as_text()
     skills = Lobber.Skills.format()

@@ -10,7 +10,7 @@ defmodule Lobber.MixProject do
       deps: deps(),
       releases: [
         lobber: [
-          include_executables_for: [:unix],
+          include_executables_for: [:unix]
         ]
       ]
     ]

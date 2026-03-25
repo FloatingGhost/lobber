@@ -31,7 +31,7 @@ defmodule Lobber.Conversation.Message do
         tool_call_id: tool_call_id
       }) do
     %{
-      "role" => role,
+      "role" => role
     }
     |> maybe_put_tool_calls(tool_calls)
     |> maybe_put_tool_call_id(tool_call_id)
@@ -51,6 +51,7 @@ defmodule Lobber.Conversation.Message do
   end
 
   defp maybe_put_content(map, nil), do: maybe_put_content(map, "")
+
   defp maybe_put_content(map, content) do
     Map.put(map, "content", content)
   end

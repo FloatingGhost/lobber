@@ -10,6 +10,7 @@ defmodule Lobber.Cave do
   @memories "THINKS.md"
   @store "shiny_things"
   @conversations "conversations"
+  @identity "IDENTITY.md"
 
   defp cave() do
     Lobber.Config.get(:cave)
@@ -41,7 +42,17 @@ defmodule Lobber.Cave do
 
   defp ensure_memories() do
     unless File.exists?(file_path(@memories)) do
-      :ok = File.cp("priv/cave/THINKS.md", file_path(@memories))
+      :ok =
+        Lobber.Config.priv_path("cave/THINKS.md")
+        |> File.cp(file_path(@memories))
+    end
+  end
+
+  defp ensure_identity() do
+    unless File.exists?(file_path(@identity)) do
+      :ok =
+        Lobber.Config.priv_path("cave/IDENTITY.md")
+        |> File.cp(file_path(@identity))
     end
   end
 
@@ -51,6 +62,7 @@ defmodule Lobber.Cave do
     ensure_memories()
     ensure_store()
     ensure_backup()
+    ensure_identity()
   end
 
   def format_for_prompt() do
@@ -65,7 +77,9 @@ defmodule Lobber.Cave do
   end
 
   def remember(content) do
-    File.write(file_path(@memories), content)
+    memories = file_path(@memories)
+    {:ok, old} = File.read(memories)
+    File.write(memories, "#{old}\n#{content}")
   end
 
   def store(file_name, content) do
@@ -108,5 +122,17 @@ defmodule Lobber.Cave do
       []
     end
     |> Enum.map(&Lobber.Conversation.Message.decode/1)
+  end
+
+  def add_to_identity(data) do
+    identity = file_path(@identity)
+    {:ok, old} = File.read(identity)
+    File.write(identity, "#{old}\n#{data}")
+  end
+
+  def overwrite_identity(data) do
+    @identity
+    |> file_path()
+    |> File.write(data)
   end
 end
