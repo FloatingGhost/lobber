@@ -23,6 +23,7 @@ we love lobber
 - Retained chain of thought so your lobber can remember what it was thinking when it did something
 - Lobber's own little cave where it stores shiny rocks (markdown files) for later use
 - NO SILLY BASH EXECUTION WE'RE ALL ELIXIR ALL THE WAY DOWN
+- Dynamic context compaction via `!!compact` to keep your conversations going
 
 ## Lobber's design
 

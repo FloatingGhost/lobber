@@ -123,8 +123,18 @@ defmodule Lobber.Conversation do
     command_response("#{mod} promoted.", state, opts)
   end
 
+  defp handle_command("compact", %{history: history} = state, opts) do
+    message = Lobber.Conversation.Compaction.compact(history)
+
+    new_history =
+      [message]
+      |> maybe_inject_system_prompt()
+
+    command_response("Conversation compacted", %{state | history: new_history}, opts)
+  end
+
   defp handle_command(cmd, state, opts) do
-    command_response("What is #{cmd}????", state, opts)
+    command_response("What is '#{cmd}'????", state, opts)
   end
 
   defp command_response(output, state, opts) do
