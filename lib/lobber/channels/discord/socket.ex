@@ -259,7 +259,7 @@ defmodule Lobber.Channels.Discord.Socket do
       {:error, :needs_auth, id} ->
         send_message(state.client, channel_id, "LOBBER NEED AUTH! Pair with id #{id} pls :<")
         state
-      end
+    end
   end
 
   defp handle_data(
@@ -347,6 +347,11 @@ defmodule Lobber.Channels.Discord.Socket do
     next_hb = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, next_hb)
     %{state | heartbeat_acknowledged: true}
+  end
+
+  defp handle_data(other, state) do
+    Logger.warn("Unhandled discord frame: #{other}")
+    state
   end
 
   def handle_cast(

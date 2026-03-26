@@ -2,17 +2,26 @@ defmodule Lobber.Tools do
   alias Lobber.Tools
 
   def list() do
-    [
-      Tools.AddTool,
-      Tools.Remember,
-      Tools.Store,
-      Tools.SearchWeb,
-      Tools.SummariseWeb,
-      Tools.FetchWeb,
-      Tools.AddIdentity,
-      Tools.ReplaceIdentity,
-      Tools.ProposeTool
-    ] ++ Lobber.Cave.custom_tools()
+    ([
+       Tools.AddTool,
+       Tools.Remember,
+       Tools.Store,
+       Tools.SearchWeb,
+       Tools.SummariseWeb,
+       Tools.FetchWeb,
+       Tools.AddIdentity,
+       Tools.ReplaceIdentity,
+       Tools.ProposeTool
+     ] ++ list_by_behaviour())
+    |> Enum.uniq()
+  end
+
+  # some tools (custom ones) are dynamic and won't be here at compile time
+  defp list_by_behaviour() do
+    for {module, _} <- :code.all_loaded(),
+        Lobber.Tool.Behaviour in (module.module_info(:attributes)[:behaviour] || []) do
+      module
+    end
   end
 
   def as_text() do

@@ -29,11 +29,9 @@ defmodule Lobber.Config.Auth do
     current = value()
 
     Agent.update(__MODULE__, fn state ->
-      IO.inspect(state)
       [id | state]
       |> save_config()
-
-      end) |> IO.inspect()
+    end)
   end
 
   def authorized?(id) do

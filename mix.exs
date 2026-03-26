@@ -42,5 +42,4 @@ defmodule Lobber.MixProject do
     File.cp_r!("./rel/files", target_path)
     release
   end
-
 end

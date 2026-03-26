@@ -46,25 +46,25 @@ defmodule Lobber.Cave do
   defp ensure_dirs() do
     for dir <- @ensure_dirs do
       unless File.exists?(file_path(dir)) do
-      File.mkdir_p(file_path(dir))
+        File.mkdir_p(file_path(dir))
       end
     end
   end
 
-  def custom_tools() do
-    {:ok, tools, _} =
+  defp recompile_custom_tools() do
+    @tools
+    |> file_path()
+    |> File.ls!()
+    |> Enum.map(fn path ->
       @tools
       |> file_path()
-      |> File.ls!()
-      |> Enum.map(fn path ->
-        @tools
-        |> file_path()
-        |> Path.join(path)
-      end)
-      |> Kernel.ParallelCompiler.compile(return_diagnostics: true)
-      |> IO.inspect()
+      |> Path.join(path)
+    end)
+    |> Kernel.ParallelCompiler.compile(return_diagnostics: true)
+  end
 
-    tools
+  def reload() do
+    recompile_custom_tools()
   end
 
   def promote_tool(name) do
@@ -103,6 +103,7 @@ defmodule Lobber.Cave do
     ensure_memories()
     ensure_identity()
     ensure_dirs()
+    recompile_custom_tools()
   end
 
   def format_for_prompt() do

@@ -20,6 +20,7 @@ defmodule Lobber.Conversations do
 
   def get_or_spawn(provider, id) do
     conversation = conversation_id(provider, id)
+
     if Lobber.Config.Auth.authorized?(conversation) do
       Logger.info("Looking up #{conversation}")
 

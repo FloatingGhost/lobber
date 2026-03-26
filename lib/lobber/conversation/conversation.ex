@@ -103,6 +103,7 @@ defmodule Lobber.Conversation do
   end
 
   defp handle_command("reload", %{id: id, history: history} = state, opts) do
+    Lobber.Cave.reload()
     history = maybe_inject_system_prompt(history)
     Lobber.Cave.backup_conversation(id, history)
     command_response("Conversation reloaded", %{state | history: history}, opts)
