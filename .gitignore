@@ -23,3 +23,4 @@ lobber-*.tar
 /tmp/
 .lobber
 docs/node_modules
+dist
