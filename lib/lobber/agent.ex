@@ -10,7 +10,7 @@ defmodule Lobber.Agent do
   """
 
   @supervisor Lobber.Agent.Supervisor
-  @max_turns 10
+  @max_turns 50
 
   @starting_tools [
     Lobber.Tools.AddTool,
