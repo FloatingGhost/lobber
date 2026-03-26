@@ -15,16 +15,20 @@ defmodule Lobber.Conversations do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  defp conversation_id(provider, id), do: "#{provider}:#{id}"
+  def conversation_id(provider, id), do: "#{provider}:#{id}"
   defp process_name(id), do: {:via, Registry, {registry(), id}}
 
   def get_or_spawn(provider, id) do
     conversation = conversation_id(provider, id)
-    Logger.info("Looking up #{conversation}")
+    if Lobber.Config.Auth.authorized?(conversation) do
+      Logger.info("Looking up #{conversation}")
 
-    case Registry.lookup(registry(), conversation) do
-      [{pid, _value}] -> pid
-      [] -> spawn_new(conversation)
+      case Registry.lookup(registry(), conversation) do
+        [{pid, _value}] -> {:ok, pid}
+        [] -> spawn_new(conversation)
+      end
+    else
+      {:error, :needs_auth, conversation}
     end
   end
 
@@ -35,10 +39,10 @@ defmodule Lobber.Conversations do
 
     case DynamicSupervisor.start_child(__MODULE__, spec) do
       {:ok, pid} ->
-        pid
+        {:ok, pid}
 
       {:ok, pid, _info} ->
-        pid
+        {:ok, pid}
 
       {:error, err} ->
         Logger.error("Could not start child! #{inspect(err)}")

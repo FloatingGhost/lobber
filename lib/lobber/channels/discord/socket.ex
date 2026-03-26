@@ -244,16 +244,22 @@ defmodule Lobber.Channels.Discord.Socket do
          %{client: client, user_id: user_id, channel_name: channel_name} = state
        ) do
     Logger.info("#{username}: #{content}")
-    conversation = Lobber.Conversations.get_or_spawn(channel_name, channel_id)
 
-    Lobber.Conversation.add_message(
-      conversation,
-      self(),
-      content,
-      %{channel_id: channel_id}
-    )
+    case Lobber.Conversations.get_or_spawn(channel_name, channel_id) do
+      {:ok, conversation} ->
+        Lobber.Conversation.add_message(
+          conversation,
+          self(),
+          content,
+          %{channel_id: channel_id}
+        )
 
-    state
+        state
+
+      {:error, :needs_auth, id} ->
+        send_message(state.client, channel_id, "LOBBER NEED AUTH! Pair with id #{id} pls :<")
+        state
+      end
   end
 
   defp handle_data(

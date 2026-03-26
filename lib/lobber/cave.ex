@@ -12,6 +12,14 @@ defmodule Lobber.Cave do
   @conversations "conversations"
   @identity "IDENTITY.md"
   @tools "tools"
+  @config "config"
+
+  @ensure_dirs [
+    @store,
+    @tools,
+    @config,
+    @conversations
+  ]
 
   defp cave() do
     Lobber.Config.get(:cave)
@@ -35,15 +43,11 @@ defmodule Lobber.Cave do
     end
   end
 
-  defp ensure_backup() do
-    unless File.exists?(file_path(@conversations)) do
-      File.mkdir(file_path(@conversations))
-    end
-  end
-
-  defp ensure_tools() do
-    unless File.exists?(file_path(@tools)) do
-      File.mkdir(file_path(@tools))
+  defp ensure_dirs() do
+    for dir <- @ensure_dirs do
+      unless File.exists?(file_path(dir)) do
+      File.mkdir_p(file_path(dir))
+      end
     end
   end
 
@@ -97,10 +101,8 @@ defmodule Lobber.Cave do
     Logger.info("Checking lobber cave...")
     ensure_cave()
     ensure_memories()
-    ensure_store()
-    ensure_backup()
     ensure_identity()
-    ensure_tools()
+    ensure_dirs()
   end
 
   def format_for_prompt() do
@@ -112,6 +114,40 @@ defmodule Lobber.Cave do
       {:ok, contents} = File.read(f)
       contents
     end)
+  end
+
+  @doc """
+  Read a file from lobber's cave
+
+  Lobber.Cave.read_from_cave("config/auth.json")
+  => {:ok, data}
+  """
+  def read_from_cave(file_name) do
+    {:ok, path} = Path.safe_relative(file_name)
+
+    path =
+      cave()
+      |> Path.join(path)
+
+    File.read(path)
+  end
+
+  @doc """
+  Write a file to lobber's cave
+
+  Lobber.Cave.write_to_cave("config/auth.json")
+  => :ok
+  """
+  def write_to_cave(file_name, content) do
+    {:ok, path} = Path.safe_relative(file_name)
+
+    path =
+      cave()
+      |> Path.join(path)
+
+    Logger.info("Writing to #{path}")
+
+    File.write(path, content)
   end
 
   def remember(content) do

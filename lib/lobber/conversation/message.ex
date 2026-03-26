@@ -1,5 +1,10 @@
 defmodule Lobber.Conversation.Message do
-  defstruct role: "", content: "", tool_calls: [], tool_call_id: nil, reasoning: nil, reasoning_details: nil
+  defstruct role: "",
+            content: "",
+            tool_calls: [],
+            tool_call_id: nil,
+            reasoning: nil,
+            reasoning_details: nil
 
   def decode(
         %{
@@ -20,14 +25,16 @@ defmodule Lobber.Conversation.Message do
     |> Map.put(:reasoning_details, Map.get(data, "reasoning_details", nil))
   end
 
-  def encode(%__MODULE__{
-        role: role,
-        content: content,
-        tool_calls: tool_calls,
-        tool_call_id: tool_call_id,
-        reasoning: reasoning,
-        reasoning_details: reasoning_details
-  } = data) do
+  def encode(
+        %__MODULE__{
+          role: role,
+          content: content,
+          tool_calls: tool_calls,
+          tool_call_id: tool_call_id,
+          reasoning: reasoning,
+          reasoning_details: reasoning_details
+        } = data
+      ) do
     %{
       "role" => role,
       "content" => content
@@ -51,11 +58,13 @@ defmodule Lobber.Conversation.Message do
   end
 
   defp maybe_put_reasoning(map, nil), do: map
+
   defp maybe_put_reasoning(map, content) do
     Map.put(map, "reasoning", content)
   end
 
   defp maybe_put_reasoning_details(map, nil), do: map
+
   defp maybe_put_reasoning_details(map, content) do
     Map.put(map, "reasoning_details", content)
   end

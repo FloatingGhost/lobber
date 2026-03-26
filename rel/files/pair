@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./bin/lobber rpc "Lobber.Config.Auth.authorize(\"$1\")"

@@ -10,7 +10,8 @@ defmodule Lobber.MixProject do
       deps: deps(),
       releases: [
         lobber: [
-          include_executables_for: [:unix]
+          include_executables_for: [:unix],
+          steps: [:assemble, &copy_extra_files/1]
         ]
       ]
     ]
@@ -36,4 +37,10 @@ defmodule Lobber.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
+
+  defp copy_extra_files(%{path: target_path} = release) do
+    File.cp_r!("./rel/files", target_path)
+    release
+  end
+
 end

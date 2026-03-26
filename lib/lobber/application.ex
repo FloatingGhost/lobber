@@ -11,6 +11,7 @@ defmodule Lobber.Application do
 
     children = [
       {Registry, [keys: :unique, name: Lobber.Conversations.registry()]},
+      {Lobber.Config.Holder, []},
       {Task.Supervisor, name: Lobber.Agent.supervisor()},
       {Lobber.Channels, channels},
       {Lobber.Conversations, []}
