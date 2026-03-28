@@ -5,12 +5,12 @@ defmodule Lobber.System do
 
   def system_prompt() do
     built_in = Lobber.Config.read_priv("SYSTEM.md")
-    memories = Lobber.Cave.format_for_prompt()
+    cave_data = Lobber.Cave.format_for_prompt()
     tools = Lobber.Tools.as_text()
     skills = Lobber.Skills.format()
     "#{built_in}
 
-    #{memories}
+    #{cave_data}
 
     You have the following tools available to you:
     #{tools}

@@ -123,10 +123,11 @@ defmodule Lobber.Cave do
 
   def format_for_prompt() do
     [
+      @identity,
       @memories
     ]
     |> Enum.map(&file_path/1)
-    |> Enum.map(fn f ->
+    |> Enum.map_join("\n", fn f ->
       {:ok, contents} = File.read(f)
       contents
     end)
