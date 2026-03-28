@@ -1,7 +1,6 @@
 defmodule Lobber.System do
   @moduledoc """
-  Defines the system settings for lobber
-  Things like its system prompt
+  Defines the system prompt for lobber
   """
 
   def system_prompt() do

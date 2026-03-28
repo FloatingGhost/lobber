@@ -1,4 +1,8 @@
 defmodule Lobber.Channels.Discord.DiscordMessage do
+  @moduledoc """
+  Struct to more easily pattern-match against discord messages
+  """
+
   alias Lobber.Channels.Discord.Opcodes
 
   defstruct opcode: nil, data: %{}, sequence_number: nil, type: ""

@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.ProposeTool do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "propose_tool"

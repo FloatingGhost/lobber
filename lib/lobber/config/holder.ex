@@ -1,4 +1,9 @@
 defmodule Lobber.Config.Holder do
+  @moduledoc """
+  Organisation supervisor to keep global state config
+  Not strictly needed but keeps config agents out of application.ex
+  """
+
   use Supervisor
 
   def start_link(_) do

@@ -1,4 +1,9 @@
 defmodule Lobber.Conversation do
+  @moduledoc """
+  The core conversation process - holds all message history and communicates
+  upstream with Channels and downstream with Agents
+  """
+
   alias Lobber.Conversation.Message
 
   use GenServer
@@ -115,7 +120,16 @@ defmodule Lobber.Conversation do
     command_response("Conversation cleared", %{state | history: history}, opts)
   end
 
-  defp handle_command("promote" <> mod, state, opts) do
+
+   defp handle_command("promotemod" <> mod, state, opts) do
+    mod
+    |> String.trim()
+    |> Lobber.Cave.promote_mod()
+
+    command_response("#{mod} promoted.", state, opts)
+  end
+
+  defp handle_command("promotetool" <> mod, state, opts) do
     mod
     |> String.trim()
     |> Lobber.Cave.promote_tool()
@@ -123,12 +137,15 @@ defmodule Lobber.Conversation do
     command_response("#{mod} promoted.", state, opts)
   end
 
-  defp handle_command("compact", %{history: history} = state, opts) do
+
+  defp handle_command("compact", %{id: id, history: history} = state, opts) do
     message = Lobber.Conversation.Compaction.compact(history)
 
     new_history =
       [message]
       |> maybe_inject_system_prompt()
+
+    Lobber.Cave.backup_conversation(id, new_history)
 
     command_response("Conversation compacted", %{state | history: new_history}, opts)
   end

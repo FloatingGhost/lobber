@@ -20,7 +20,10 @@ defmodule Lobber.Agent do
     Lobber.Tools.FetchWeb,
     Lobber.Tools.AddIdentity,
     Lobber.Tools.ReplaceIdentity,
-    Lobber.Tools.ProposeTool
+    Lobber.Tools.ProposeTool,
+    Lobber.Tools.ViewSource,
+    Lobber.Tools.ListModules,
+    Lobber.Tools.ProposeModule,
   ]
 
   alias Lobber.Conversation
@@ -37,6 +40,7 @@ defmodule Lobber.Agent do
   it will be sent either {:agent_response, binary(), term()} or  {:agent_error, term(), term()}
   where the final element is your opts from invocation.
   """
+  @spec prompt(pid(), list(map()), map(), map()) :: {:ok, pid()}
   def prompt(respond_to, [], next_message, opts) do
     # inject the system prompt before we start the loop proper
     system = %Conversation.Message{
@@ -65,6 +69,8 @@ defmodule Lobber.Agent do
   # the main "agentic loop" (but it's not a loop because this is elixir)
   # agentic recursion?
   # handle_provider_response can either recurse back here, or exit out
+  @spec call_provider(list(map()), map(), list(map()), map()) ::
+          {:ok, binary()} | {:error, term()}
   defp call_provider(_messages, _next_message, _tools, %{turns: @max_turns}) do
     {:error, :too_many_turns}
   end

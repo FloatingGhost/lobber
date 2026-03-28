@@ -1,4 +1,10 @@
 defmodule Lobber.Conversations do
+  @moduledoc """
+  The supervisor watching over all conversations with lobber.
+  Can have new conversations spawned under it at any time.
+  All conversations are registered against Registry.LobberConversations for later reference
+  """
+
   use DynamicSupervisor
 
   require Logger
@@ -18,6 +24,7 @@ defmodule Lobber.Conversations do
   def conversation_id(provider, id), do: "#{provider}:#{id}"
   defp process_name(id), do: {:via, Registry, {registry(), id}}
 
+  @spec get_or_spawn(binary(), binary()) :: {:ok, pid()} | {:error, :needs_auth, binary()}
   def get_or_spawn(provider, id) do
     conversation = conversation_id(provider, id)
 

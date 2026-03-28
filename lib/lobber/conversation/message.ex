@@ -1,4 +1,9 @@
 defmodule Lobber.Conversation.Message do
+  @moduledoc """
+  Represents a single message in a conversation.
+  Can be from the user or the model
+  """
+
   defstruct role: "",
             content: "",
             tool_calls: [],

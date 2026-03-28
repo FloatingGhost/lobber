@@ -1,4 +1,9 @@
 defmodule Lobber.Application do
+  @moduledoc """
+  Primary supervision tree. No real logic should live in here,
+  this is purely starting our application
+  """
+
   use Application
   require Logger
 

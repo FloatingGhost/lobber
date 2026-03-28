@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.Remember do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "remember"

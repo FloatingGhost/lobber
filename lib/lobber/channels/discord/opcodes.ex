@@ -1,4 +1,8 @@
 defmodule Lobber.Channels.Discord.Opcodes do
+  @moduledoc """
+  Mapping between discord's numeric opcodes and human-readable values
+  """
+
   @opcodes %{
     dispatch: 0,
     heartbeat: 1,

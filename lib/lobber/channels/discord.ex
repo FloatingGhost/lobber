@@ -1,4 +1,8 @@
 defmodule Lobber.Channels.Discord do
+  @moduledoc """
+  Higher-level supervisor for discord, ensures that the websocket dying is fully isolated from the main
+  application
+  """
   use Supervisor
 
   @behaviour Lobber.Channel.Behaviour

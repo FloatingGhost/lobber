@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.ReplaceIdentity do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "replace_identity"

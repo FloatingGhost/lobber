@@ -1,4 +1,9 @@
 defmodule Lobber.Provider.OpenRouter do
+  @moduledoc """
+  Implementation of the OpenRouter provider - this is openapi compatible,
+  refactor opportunity there
+  """
+
   @behaviour Lobber.Provider.Behaviour
 
   alias Lobber.Conversation
@@ -81,5 +86,12 @@ defmodule Lobber.Provider.OpenRouter do
     message = Conversation.Message.decode(message)
 
     {:tools, message.tool_calls, history ++ [message]}
+  end
+
+  defp handle_message(history, other, tools) do
+    Logger.error("Openrouter failed!")
+    IO.inspect(other)
+    IO.inspect(history)
+    :error
   end
 end

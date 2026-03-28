@@ -1,4 +1,8 @@
 defmodule Lobber.Conversation.ToolCall do
+  @moduledoc """
+  Represents a single tool call requested by the model
+  """
+
   defstruct id: "", name: "", arguments: %{}
 
   def decode(%{"id" => id, "function" => %{"name" => name, "arguments" => arguments}}) do

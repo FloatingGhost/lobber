@@ -1,4 +1,10 @@
 defmodule Lobber.Tools do
+  @moduledoc """
+  Utility functions for interacting with tools.
+  Used as both a store to ensure tools are brought in by the compiler,
+  as well as formatting for prompts
+  """
+
   alias Lobber.Tools
 
   def list() do
@@ -11,7 +17,10 @@ defmodule Lobber.Tools do
        Tools.FetchWeb,
        Tools.AddIdentity,
        Tools.ReplaceIdentity,
-       Tools.ProposeTool
+       Tools.ProposeTool,
+       Tools.ViewSource,
+       Tools.ListModules,
+       Tools.ProposeModule
      ] ++ list_by_behaviour())
     |> Enum.uniq()
   end
@@ -26,8 +35,7 @@ defmodule Lobber.Tools do
 
   def as_text() do
     list()
-    |> Enum.map(fn mod -> "TOOL #{mod.name()} - #{mod.description()}" end)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", fn mod -> "TOOL #{mod.name()} - #{mod.description()}" end)
   end
 
   def format(tools) do
@@ -44,6 +52,7 @@ defmodule Lobber.Tools do
     end)
   end
 
+  @spec by_name(binary()) :: atom() | nil
   def by_name(name) do
     list()
     |> Enum.find(fn mod -> mod.name() == name end)

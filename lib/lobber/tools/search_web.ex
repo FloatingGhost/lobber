@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.SearchWeb do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "search_web"

@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.FetchWeb do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   require Logger

@@ -1,4 +1,6 @@
 defmodule Lobber.Tools.AddTool do
+  @moduledoc false
+
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "add_tool"

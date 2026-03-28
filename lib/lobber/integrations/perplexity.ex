@@ -1,4 +1,8 @@
 defmodule Lobber.Integrations.Perplexity do
+  @moduledoc """
+  Integration against perplexity for use by tools
+  """
+
   @perplexity "https://api.perplexity.ai"
 
   defp api_key() do

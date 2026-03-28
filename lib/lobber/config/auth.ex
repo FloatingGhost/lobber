@@ -1,6 +1,6 @@
 defmodule Lobber.Config.Auth do
   @moduledoc """
-  Agent that holds dynamic authentication data
+  Agent that holds dynamic authentication data, backed up on modification
   """
 
   use Agent

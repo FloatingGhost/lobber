@@ -1,4 +1,6 @@
 defmodule Lobber.Tools.AddIdentity do
+  @moduledoc false
+
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "add_identity"

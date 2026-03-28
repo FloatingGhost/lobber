@@ -1,4 +1,7 @@
 defmodule Lobber.Channels.Discord.Socket do
+  @moduledoc """
+  Primary implementation against discord's websocket gateway
+  """
   use GenServer
 
   require Logger
@@ -28,12 +31,12 @@ defmodule Lobber.Channels.Discord.Socket do
 
     %{"url" => websock_url} = Tesla.get!(client, "/api/gateway/bot").body
 
-    Logger.info("Connecting to #{websock_url}")
+    Logger.debug("Connecting to #{websock_url}")
     websock_url = URI.parse(websock_url)
 
-    Logger.info("Initiating connection to #{websock_url.host}")
+    Logger.debug("Initiating connection to #{websock_url.host}")
     {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
-    Logger.info("Connection established")
+    Logger.debug("Connection established")
 
     {:ok,
      %{
@@ -72,7 +75,7 @@ defmodule Lobber.Channels.Discord.Socket do
 
   @impl true
   def handle_info({:gun_up, _pid, _opts}, %{status: :connecting, conn: conn} = state) do
-    Logger.info("Upgrading to websocket")
+    Logger.debug("Upgrading to websocket")
     ref = :gun.ws_upgrade(conn, "/?v=10&encoding=json", headers())
 
     {
@@ -83,7 +86,7 @@ defmodule Lobber.Channels.Discord.Socket do
 
   @impl true
   def handle_info({:gun_upgrade, _pid, _ref, _, _}, %{status: :upgrading} = state) do
-    Logger.info("Upgraded")
+    Logger.debug("Upgraded")
 
     {
       :noreply,
@@ -107,7 +110,7 @@ defmodule Lobber.Channels.Discord.Socket do
           heartbeat_acknowledged: true
         } = state
       ) do
-    Logger.info("Sending heartbeat #{seq}")
+    Logger.debug("Sending heartbeat #{seq}")
 
     {:ok, hb_frame} =
       %DiscordMessage{
@@ -137,15 +140,15 @@ defmodule Lobber.Channels.Discord.Socket do
           ref: ref
         } = state
       ) do
-    Logger.info("oops! Heartbeat was not acknowledged. We have to reconnect...")
+    Logger.debug("oops! Heartbeat was not acknowledged. We have to reconnect...")
 
     :ok = :gun.shutdown(conn)
 
     websock_url = URI.parse(websock_url)
 
-    Logger.info("Initiating connection to #{websock_url.host}")
+    Logger.debug("Initiating connection to #{websock_url.host}")
     {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
-    Logger.info("Connection established")
+    Logger.debug("Connection established")
 
     {:noreply,
      %{
@@ -160,7 +163,7 @@ defmodule Lobber.Channels.Discord.Socket do
         :heartbeat_ack_check,
         %{heartbeat_acknowledged: true} = state
       ) do
-    Logger.info("We're good")
+    Logger.debug("We're good")
     {:noreply, state}
   end
 
@@ -193,7 +196,7 @@ defmodule Lobber.Channels.Discord.Socket do
          } = message,
          state
        ) do
-    Logger.info("Discord is ready, hello #{username}!")
+    Logger.debug("Discord is ready, hello #{username}!")
 
     %DiscordMessage{
       data: %{
@@ -243,7 +246,7 @@ defmodule Lobber.Channels.Discord.Socket do
          } = message,
          %{client: client, user_id: user_id, channel_name: channel_name} = state
        ) do
-    Logger.info("#{username}: #{content}")
+    Logger.debug("#{username}: #{content}")
 
     case Lobber.Conversations.get_or_spawn(channel_name, channel_id) do
       {:ok, conversation} ->
@@ -281,7 +284,7 @@ defmodule Lobber.Channels.Discord.Socket do
          },
          state
        ) do
-    Logger.info("HELLO recieved! Interval #{heartbeat}")
+    Logger.debug("HELLO recieved! Interval #{heartbeat}")
     hb_in = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, hb_in)
 
@@ -314,7 +317,7 @@ defmodule Lobber.Channels.Discord.Socket do
       }
     else
       # resume time
-      Logger.info("Resuming session")
+      Logger.debug("Resuming session")
 
       {:ok, resume_frame} =
         %DiscordMessage{
@@ -343,7 +346,7 @@ defmodule Lobber.Channels.Discord.Socket do
          %{heartbeat_interval: heartbeat} = state
        ) do
     # Heartbeat response. Schedule the next heartbeat
-    Logger.info("Heartbeat response recieved, scheduling next (interval: #{heartbeat})")
+    Logger.debug("Heartbeat response recieved, scheduling next (interval: #{heartbeat})")
     next_hb = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, next_hb)
     %{state | heartbeat_acknowledged: true}

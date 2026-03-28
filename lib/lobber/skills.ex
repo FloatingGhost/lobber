@@ -1,4 +1,9 @@
 defmodule Lobber.Skills do
+  @moduledoc """
+  Functions for interacting with the skills system
+  skills are basically just markdown files in priv/ for now
+  """
+
   defp skill_dir() do
     Lobber.Config.priv_path("skills")
   end

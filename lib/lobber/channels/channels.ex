@@ -1,4 +1,8 @@
 defmodule Lobber.Channels do
+  @moduledoc """
+  Collection supervisor that will keep all channels alive. Will be passed a list
+  of children by its parent.
+  """
   use Supervisor
 
   def start_link(args) do
@@ -9,7 +13,4 @@ defmodule Lobber.Channels do
   def init(init_arg) do
     Supervisor.init(init_arg, strategy: :one_for_one)
   end
-
-  @impl true
-  def name(), do: "discord"
 end

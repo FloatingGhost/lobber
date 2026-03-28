@@ -3,7 +3,7 @@ defmodule Lobber.Cave do
   Sets up the cave and such so we can keep our lobber's personality through reboots
   lobber lives in cave, lobber has a nice cave
 
-  @memories - where lobber stores what it wants to remember
+  It's a whole bunch of persistence mechanisms.
   """
   require Logger
 
@@ -79,6 +79,20 @@ defmodule Lobber.Cave do
     |> file_path()
     |> Path.join(fname)
     |> File.cp(tool_fname)
+  end
+
+  def promote_mod(name) do
+    fname = "proposal-#{name}.ex"
+    Logger.info("Promoting #{fname}...")
+    mod_fname =
+      @tools
+      |> file_path()
+      |> Path.join(fname)
+
+    @store
+    |> file_path()
+    |> Path.join(fname)
+    |> File.cp!(mod_fname)
   end
 
   defp ensure_memories() do

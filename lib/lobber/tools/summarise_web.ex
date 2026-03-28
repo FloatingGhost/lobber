@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.SummariseWeb do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "summarise_web"

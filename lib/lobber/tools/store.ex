@@ -1,4 +1,5 @@
 defmodule Lobber.Tools.Store do
+  @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
   def name(), do: "store_shiny"
