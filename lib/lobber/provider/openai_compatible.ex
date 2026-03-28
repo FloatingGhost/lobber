@@ -69,7 +69,7 @@ defmodule Lobber.Provider.OpenAICompatible do
   end
 
   defp handle_resp({:ok, other}, _, _, _) do
-    Logger.error("Could not handle OpenAI response! #{inspect(body)}")
+    Logger.error("Could not handle OpenAI response! #{inspect(other)}")
     :error
   end
 
