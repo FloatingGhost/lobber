@@ -15,6 +15,9 @@ defmodule Lobber.Agent do
   @starting_tools [
     Lobber.Tools.AddTool,
     Lobber.Tools.Remember,
+    Lobber.Tools.UpdateMemory,
+    Lobber.Tools.RemoveMemory,
+    Lobber.Tools.ListMemories,
     Lobber.Tools.SummariseWeb,
     Lobber.Tools.SearchWeb,
     Lobber.Tools.FetchWeb,

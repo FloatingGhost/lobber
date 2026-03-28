@@ -168,7 +168,106 @@ defmodule Lobber.Cave do
   def remember(content) do
     memories = file_path(@memories)
     {:ok, old} = File.read(memories)
-    File.write(memories, "#{old}\n#{content}")
+
+    # Ensure content doesn't have newlines that would break structure
+    clean_content = String.replace(content, "\n", " ")
+
+    # Add timestamp for better tracking
+    timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
+    new_entry = "[#{timestamp}] #{clean_content}"
+
+    # Write with proper newline handling
+    new_content = if String.trim(old) == "" do
+      new_entry
+    else
+      "#{old}\n#{new_entry}"
+    end
+
+    File.write(memories, new_content)
+  end
+
+  @doc """
+  List all memories with their IDs (line numbers)
+  Returns {:ok, [{id, content}, ...]} or {:error, reason}
+  """
+  def list_memories() do
+    memories_path = file_path(@memories)
+
+    case File.read(memories_path) do
+      {:ok, content} ->
+        lines = String.split(content, "\n")
+        # Filter out empty lines and add IDs
+        memories = lines
+        |> Enum.with_index(1)
+        |> Enum.reject(fn {line, _id} -> String.trim(line) == "" end)
+        |> Enum.map(fn {line, id} -> {id, line} end)
+        {:ok, memories}
+
+      {:error, reason} ->
+        {:error, "Could not read memories: #{reason}"}
+    end
+  end
+
+  @doc """
+  Remove a memory by its ID (line number)
+  Returns :ok or {:error, reason}
+  """
+  def remove_memory(memory_id) when is_binary(memory_id) do
+    {id, _} = Integer.parse(memory_id)
+    remove_memory(id)
+  end
+
+  def remove_memory(memory_id) when is_integer(memory_id) and memory_id > 0 do
+    memories_path = file_path(@memories)
+
+    case File.read(memories_path) do
+      {:ok, content} ->
+        lines = String.split(content, "\n")
+
+        if memory_id > length(lines) do
+          {:error, :not_found}
+        else
+          # Remove the line at the given position
+          new_lines = List.delete_at(lines, memory_id - 1)
+          new_content = Enum.join(new_lines, "\n")
+          File.write(memories_path, new_content)
+          :ok
+        end
+
+      {:error, reason} ->
+        {:error, "Could not read memories: #{reason}"}
+    end
+  end
+
+  @doc """
+  Update a memory by its ID (line number)
+  Returns :ok or {:error, reason}
+  """
+  def update_memory(memory_id, new_content) when is_integer(memory_id) and memory_id > 0 do
+    memories_path = file_path(@memories)
+
+    case File.read(memories_path) do
+      {:ok, content} ->
+        lines = String.split(content, "\n")
+
+        if memory_id > length(lines) do
+          {:error, :not_found}
+        else
+          # Clean the new content
+          clean_content = String.replace(new_content, "\n", " ")
+          timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
+          updated_entry = "[#{timestamp}] #{clean_content}"
+
+          # Replace the line at the given position
+          new_lines = List.replace_at(lines, memory_id - 1, updated_entry)
+          new_content_str = Enum.join(new_lines, "\n")
+          File.write(memories_path, new_content_str)
+          :ok
+        end
+
+      {:error, reason} ->
+        {:error, "Could not read memories: #{reason}"}
+    end
   end
 
   def store(file_name, content) do

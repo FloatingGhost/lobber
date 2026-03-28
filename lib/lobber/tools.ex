@@ -20,7 +20,10 @@ defmodule Lobber.Tools do
        Tools.ProposeTool,
        Tools.ViewSource,
        Tools.ListModules,
-       Tools.ProposeModule
+       Tools.ProposeModule,
+       Tools.ListMemories,
+       Tools.RemoveMemory,
+       Tools.UpdateMemory
      ] ++ list_by_behaviour())
     |> Enum.uniq()
   end
