@@ -120,8 +120,7 @@ defmodule Lobber.Conversation do
     command_response("Conversation cleared", %{state | history: history}, opts)
   end
 
-
-   defp handle_command("promotemod" <> mod, state, opts) do
+  defp handle_command("promotemod" <> mod, state, opts) do
     mod
     |> String.trim()
     |> Lobber.Cave.promote_mod()
@@ -136,7 +135,6 @@ defmodule Lobber.Conversation do
 
     command_response("#{mod} promoted.", state, opts)
   end
-
 
   defp handle_command("compact", %{id: id, history: history} = state, opts) do
     message = Lobber.Conversation.Compaction.compact(history)

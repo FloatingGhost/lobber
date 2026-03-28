@@ -8,7 +8,7 @@ config :tesla,
 
 config :lobber,
   cave: ".lobber/",
-  provider: Lobber.Provider.OpenRouter,
+  provider: Lobber.Provider.Xiaomi,
   channels: [
     Lobber.Channels.Discord
   ]
@@ -16,6 +16,10 @@ config :lobber,
 config :lobber, Lobber.Provider.OpenRouter,
   model_id: "xiaomi/mimo-v2-pro",
   api_key: System.get_env("OPENROUTER_API_KEY")
+
+config :lobber, Lobber.Provider.Xiaomi,
+  model_id: "mimo-v2-pro",
+  api_key: System.get_env("XIAOMI_API_KEY")
 
 config :lobber, Lobber.Channels.Discord, bot_token: System.get_env("DISCORD_BOT_TOKEN")
 

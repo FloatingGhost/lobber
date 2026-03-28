@@ -26,7 +26,7 @@ defmodule Lobber.Agent do
     Lobber.Tools.ProposeTool,
     Lobber.Tools.ViewSource,
     Lobber.Tools.ListModules,
-    Lobber.Tools.ProposeModule,
+    Lobber.Tools.ProposeModule
   ]
 
   alias Lobber.Conversation

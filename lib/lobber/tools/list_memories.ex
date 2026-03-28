@@ -18,11 +18,14 @@ defmodule Lobber.Tools.ListMemories do
     case Lobber.Cave.list_memories() do
       {:ok, memories} when memories == [] ->
         {:string, "No memories stored yet. Cave is empty!"}
+
       {:ok, memories} ->
-        formatted = memories
-        |> Enum.map(fn {id, content} -> "[#{id}] #{content}" end)
-        |> Enum.join("\n")
+        formatted =
+          memories
+          |> Enum.map_join("\n", fn {id, content} -> "[#{id}] #{content}" end)
+
         {:string, "Lobber's memories:\n#{formatted}"}
+
       {:error, reason} ->
         {:string, "Error listing memories: #{reason}"}
     end

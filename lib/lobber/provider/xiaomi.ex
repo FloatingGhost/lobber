@@ -1,20 +1,15 @@
-defmodule Lobber.Provider.OpenRouter do
+defmodule Lobber.Provider.Xiaomi do
   @moduledoc """
-  Implementation of the OpenRouter provider - this is openapi compatible,
+  Implementation of the Xiaomi provider
   """
 
   @behaviour Lobber.Provider.Behaviour
 
+  alias Lobber.Conversation
+
   require Logger
 
-  @openrouter "https://openrouter.ai/api"
-  @extra_options %{
-    provider: %{
-      sort: %{
-        by: "throughput"
-      }
-    }
-  }
+  @xiaomi "https://api.xiaomimimo.com"
 
   defp model do
     Lobber.Config.get(__MODULE__, :model_id)
@@ -26,13 +21,14 @@ defmodule Lobber.Provider.OpenRouter do
 
   def prompt(history, next, tools) do
     Lobber.Provider.OpenAICompatible.prompt(
-      @openrouter,
+      @xiaomi,
       api_key(),
       model(),
       history,
       next,
       tools,
-      @extra_options
+      %{},
+      adapter: Lobber.Provider.Adapter.Xiaomi
     )
   end
 end

@@ -5,8 +5,7 @@ defmodule Lobber.Tools.ProposeModule do
   def name(), do: "propose_module"
 
   def description(),
-    do:
-      "Propose that your module be replaced with the given source code. Must be approved by
+    do: "Propose that your module be replaced with the given source code. Must be approved by
       a human before it will be active."
 
   def parameters(),

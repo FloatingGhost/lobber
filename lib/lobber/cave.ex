@@ -84,6 +84,7 @@ defmodule Lobber.Cave do
   def promote_mod(name) do
     fname = "proposal-#{name}.ex"
     Logger.info("Promoting #{fname}...")
+
     mod_fname =
       @tools
       |> file_path()
@@ -177,11 +178,12 @@ defmodule Lobber.Cave do
     new_entry = "[#{timestamp}] #{clean_content}"
 
     # Write with proper newline handling
-    new_content = if String.trim(old) == "" do
-      new_entry
-    else
-      "#{old}\n#{new_entry}"
-    end
+    new_content =
+      if String.trim(old) == "" do
+        new_entry
+      else
+        "#{old}\n#{new_entry}"
+      end
 
     File.write(memories, new_content)
   end
@@ -197,10 +199,12 @@ defmodule Lobber.Cave do
       {:ok, content} ->
         lines = String.split(content, "\n")
         # Filter out empty lines and add IDs
-        memories = lines
-        |> Enum.with_index(1)
-        |> Enum.reject(fn {line, _id} -> String.trim(line) == "" end)
-        |> Enum.map(fn {line, id} -> {id, line} end)
+        memories =
+          lines
+          |> Enum.with_index(1)
+          |> Enum.reject(fn {line, _id} -> String.trim(line) == "" end)
+          |> Enum.map(fn {line, id} -> {id, line} end)
+
         {:ok, memories}
 
       {:error, reason} ->

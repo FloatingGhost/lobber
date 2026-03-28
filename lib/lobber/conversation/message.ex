@@ -11,6 +11,9 @@ defmodule Lobber.Conversation.Message do
             reasoning: nil,
             reasoning_details: nil
 
+  defp empty_list_if_nil(nil), do: []
+  defp empty_list_if_nil(other), do: other
+
   def decode(
         %{
           "role" => role,
@@ -23,7 +26,10 @@ defmodule Lobber.Conversation.Message do
     }
     |> Map.put(
       :tool_calls,
-      Enum.map(Map.get(data, "tool_calls", []), &Lobber.Conversation.ToolCall.decode/1)
+      Enum.map(
+        Map.get(data, "tool_calls", []) |> empty_list_if_nil(),
+        &Lobber.Conversation.ToolCall.decode/1
+      )
     )
     |> Map.put(:tool_call_id, Map.get(data, "tool_call_id", nil))
     |> Map.put(:reasoning, Map.get(data, "reasoning", nil))

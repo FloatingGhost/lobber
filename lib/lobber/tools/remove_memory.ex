@@ -22,8 +22,10 @@ defmodule Lobber.Tools.RemoveMemory do
     case Lobber.Cave.remove_memory(memory_id) do
       :ok ->
         {:string, "Memory ##{memory_id} removed from cave! Lobber forget that one."}
+
       {:error, :not_found} ->
         {:string, "Memory ##{memory_id} not found! Use list_memories to see valid IDs."}
+
       {:error, reason} ->
         {:string, "Error removing memory: #{reason}"}
     end
