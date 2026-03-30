@@ -28,13 +28,13 @@ defmodule Lobber.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:mint, "~> 1.7.1"},
       {:castore, "~> 1.0.17"},
       {:jason, "~> 1.4.4"},
       {:tesla, "~> 1.11"},
       {:gun, "~> 2.2"},
       {:idna, "~> 6.0"},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:quantum, "~> 3.5"}
     ]
   end
 

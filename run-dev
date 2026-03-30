@@ -1,0 +1,2 @@
+#!/bin/bash
+elixir --sname lobber -S mix run --no-halt

@@ -248,6 +248,11 @@ defmodule Lobber.Cave do
   Update a memory by its ID (line number)
   Returns :ok or {:error, reason}
   """
+  def update_memory(memory_id, new_content) when is_binary(memory_id) do
+    {id, _} = Integer.parse(memory_id)
+    update_memory(id, new_content)
+  end
+
   def update_memory(memory_id, new_content) when is_integer(memory_id) and memory_id > 0 do
     memories_path = file_path(@memories)
 

@@ -6,8 +6,21 @@ defmodule Lobber.Provider do
 
   @behaviour Lobber.Provider.Behaviour
 
+  alias Lobber.Provider
+
+  # 100% here to make sure everything gets brought in by the compiler
+  @providers [
+    Provider.OpenRouter,
+    Provider.Xiaomi
+  ]
+
   defp provider() do
     Lobber.Config.get(:provider)
+  end
+
+  def by_name(name) do
+    @providers
+    |> Enum.find(fn mod -> mod.name() == name end)
   end
 
   @doc """
@@ -17,4 +30,7 @@ defmodule Lobber.Provider do
   def prompt(conversation, next_message, tools) do
     provider().prompt(conversation, next_message, tools)
   end
+
+  # we need to implement this to meet the behaviour
+  def name(), do: "meta"
 end

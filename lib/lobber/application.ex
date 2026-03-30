@@ -9,6 +9,7 @@ defmodule Lobber.Application do
 
   @impl true
   def start(_type, _args) do
+    Logger.info("Node is #{Node.self()}")
     Logger.info("Starting supervision")
 
     Lobber.Cave.ensure()
@@ -19,7 +20,8 @@ defmodule Lobber.Application do
       {Lobber.Config.Holder, []},
       {Task.Supervisor, name: Lobber.Agent.supervisor()},
       {Lobber.Channels, channels},
-      {Lobber.Conversations, []}
+      {Lobber.Conversations, []},
+      {Lobber.Tasks.Scheduler, []}
     ]
 
     opts = [strategy: :one_for_one, name: Lobber.Supervisor]

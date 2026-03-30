@@ -16,6 +16,9 @@ defmodule Lobber.Provider.OpenRouter do
     }
   }
 
+  @impl true
+  def name(), do: "openrouter"
+
   defp model do
     Lobber.Config.get(__MODULE__, :model_id)
   end

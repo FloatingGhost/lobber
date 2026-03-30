@@ -55,8 +55,10 @@ defmodule Lobber.Agent do
   end
 
   def prompt(respond_to, messages, next_message, opts) do
+    starting_tools = Map.get(opts, :starting_tools, @starting_tools)
+
     Task.Supervisor.start_child(supervisor(), fn ->
-      case call_provider(messages, next_message, @starting_tools, %{
+      case call_provider(messages, next_message, starting_tools, %{
              respond_to: respond_to,
              turns: 0
            }) do

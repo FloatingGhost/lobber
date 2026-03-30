@@ -66,8 +66,10 @@ defmodule Lobber.Conversation do
       content: message
     }
 
+    {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
     # wrap opts in our own layer so we know who to respond to
     opts = %{
+      agent_opts: agent_opts,
       respond_to: respond_to,
       channel_opts: opts
     }
@@ -85,7 +87,8 @@ defmodule Lobber.Conversation do
       ) do
     %{respond_to: respond_to, channel_opts: channel_opts} = opts
 
-    GenServer.cast(respond_to, {:conversation_response, message, channel_opts})
+    respond_to_channel(respond_to, {:conversation_response, message, channel_opts})
+
     {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
   end
 
@@ -159,7 +162,7 @@ defmodule Lobber.Conversation do
     }
 
     %{respond_to: respond_to, channel_opts: channel_opts} = opts
-    GenServer.cast(respond_to, {:conversation_response, message, channel_opts})
+    respond_to_channel(respond_to, {:conversation_response, message, channel_opts})
     {:noreply, state}
   end
 
@@ -170,5 +173,10 @@ defmodule Lobber.Conversation do
   """
   def add_message(conversation_pid, respond_to, message, opts) do
     GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
+  end
+
+  def respond_to_channel(:do_not_reply, _), do: nil
+  def respond_to_channel(channel_pid, args) do
+    GenServer.cast(channel_pid, args)
   end
 end

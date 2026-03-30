@@ -11,6 +11,9 @@ defmodule Lobber.Provider.Xiaomi do
 
   @xiaomi "https://api.xiaomimimo.com"
 
+  @impl true
+  def name(), do: "xiaomi"
+
   defp model do
     Lobber.Config.get(__MODULE__, :model_id)
   end

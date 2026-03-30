@@ -34,6 +34,8 @@ defmodule Lobber.Config.Auth do
     end)
   end
 
+  def authorized?("system:" <> _id), do: true
+
   def authorized?(id) do
     value()
     |> Enum.member?(id)
