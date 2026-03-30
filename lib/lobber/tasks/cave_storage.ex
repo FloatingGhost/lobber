@@ -8,7 +8,6 @@ defmodule Lobber.Tasks.CaveStorage do
 
   @persistence "cron_state.json"
 
-
   def start_link(opts) do
     Logger.info("Starting cave cron...")
     GenServer.start_link(__MODULE__, load(), opts)
@@ -21,19 +20,19 @@ defmodule Lobber.Tasks.CaveStorage do
 
   defp initial_state() do
     %{
-    last_execution_date: nil,
-    jobs: [
-      Lobber.Tasks.Scheduler.new_job()
-      |> Quantum.Job.set_schedule(~e[0 * * * *])
-      |> Quantum.Job.set_task({ Lobber.Tasks.Reload, :run, []})
-      |> Quantum.Job.set_state(:active),
-      Lobber.Tasks.Scheduler.new_job()
-      |> Quantum.Job.set_schedule(~e[0 0 * * *])
-      |> Quantum.Job.set_task({ Lobber.Tasks.MemoryManagement, :run, []})
-      |> Quantum.Job.set_state(:active)
-    ]
-  }
-end
+      last_execution_date: nil,
+      jobs: [
+        Lobber.Tasks.Scheduler.new_job()
+        |> Quantum.Job.set_schedule(~e[@hourly])
+        |> Quantum.Job.set_task({Lobber.Tasks.Reload, :run, []})
+        |> Quantum.Job.set_state(:active),
+        Lobber.Tasks.Scheduler.new_job()
+        |> Quantum.Job.set_schedule(~e[@daily])
+        |> Quantum.Job.set_task({Lobber.Tasks.MemoryManagement, :run, []})
+        |> Quantum.Job.set_state(:active)
+      ]
+    }
+  end
 
   defp maybe_prepend_mod("Elixir." <> _mod = mod), do: mod
   defp maybe_prepend_mod(mod), do: "Elixir.#{mod}"

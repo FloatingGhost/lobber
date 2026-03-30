@@ -30,5 +30,4 @@ config :lobber, Lobber.Integrations.Perplexity,
   api_key: System.get_env("PERPLEXITY_API_KEY"),
   sonar_model: "sonar-pro"
 
-config :lobber, Lobber.Tasks.Scheduler,
-  storage: Lobber.Tasks.CaveStorage
+config :lobber, Lobber.Tasks.Scheduler, storage: Lobber.Tasks.CaveStorage
