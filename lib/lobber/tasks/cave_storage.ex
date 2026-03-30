@@ -8,10 +8,6 @@ defmodule Lobber.Tasks.CaveStorage do
 
   @persistence "cron_state.json"
 
-  @initial_state %{
-    last_execution_date: nil,
-    jobs: []
-  }
 
   def start_link(opts) do
     Logger.info("Starting cave cron...")
@@ -22,6 +18,22 @@ defmodule Lobber.Tasks.CaveStorage do
   def init(state) do
     {:ok, state}
   end
+
+  defp initial_state() do
+    %{
+    last_execution_date: nil,
+    jobs: [
+      Lobber.Tasks.Scheduler.new_job()
+      |> Quantum.Job.set_schedule(~e[0 * * * *])
+      |> Quantum.Job.set_task({ Lobber.Tasks.Reload, :run, []})
+      |> Quantum.Job.set_state(:active),
+      Lobber.Tasks.Scheduler.new_job()
+      |> Quantum.Job.set_schedule(~e[0 0 * * *])
+      |> Quantum.Job.set_task({ Lobber.Tasks.MemoryManagement, :run, []})
+      |> Quantum.Job.set_state(:active)
+    ]
+  }
+end
 
   defp maybe_prepend_mod("Elixir." <> _mod = mod), do: mod
   defp maybe_prepend_mod(mod), do: "Elixir.#{mod}"
@@ -45,6 +57,12 @@ defmodule Lobber.Tasks.CaveStorage do
     repl
   end
 
+  defp persist(%{} = state) do
+    {:ok, data} = Jason.encode(state, pretty: true)
+    Lobber.Cave.write_to_cave(@persistence, data)
+    state
+  end
+
   defp load() do
     case Lobber.Cave.read_from_cave(@persistence) do
       {:ok, raw} ->
@@ -59,7 +77,8 @@ defmodule Lobber.Tasks.CaveStorage do
         }
 
       {:error, _} ->
-        @initial_state
+        initial_state()
+        |> persist()
     end
   end
 

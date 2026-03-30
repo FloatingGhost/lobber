@@ -64,4 +64,9 @@ defmodule Lobber.Conversations do
       [] -> :no_process
     end
   end
+
+  def reload_all() do
+    Registry.select(Lobber.Conversations.registry(), [{{:"$1", :"$2", :"$3"}, [], [:"$2"]}])
+    |> Enum.each(&Lobber.Conversation.reload/1)
+  end
 end

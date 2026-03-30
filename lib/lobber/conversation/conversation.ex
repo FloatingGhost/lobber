@@ -48,6 +48,7 @@ defmodule Lobber.Conversation do
   end
 
   def handle_call(:reload, _caller, %{history: history} = state) do
+    Logger.info("Reloading...")
     {:reply, :ok, %{state | history: maybe_inject_system_prompt(history)}}
   end
 
