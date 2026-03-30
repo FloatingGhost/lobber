@@ -47,6 +47,10 @@ defmodule Lobber.Conversation do
     [system | history]
   end
 
+  def handle_call(:reload, _caller, %{history: history} = state) do
+    {:reply, :ok, %{state | history: maybe_inject_system_prompt(history)}}
+  end
+
   @impl true
   def handle_cast(
         {:message, respond_to, "!!" <> command, opts},
@@ -176,7 +180,12 @@ defmodule Lobber.Conversation do
   end
 
   def respond_to_channel(:do_not_reply, _), do: nil
+
   def respond_to_channel(channel_pid, args) do
     GenServer.cast(channel_pid, args)
+  end
+
+  def reload(pid) do
+    GenServer.call(pid, :reload)
   end
 end

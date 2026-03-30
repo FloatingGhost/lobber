@@ -57,4 +57,11 @@ defmodule Lobber.Conversations do
         :error
     end
   end
+
+  def stop(id) do
+    case Registry.lookup(registry(), id) do
+      [{pid, _value}] -> DynamicSupervisor.terminate_child(__MODULE__, pid)
+      [] -> :no_process
+    end
+  end
 end
