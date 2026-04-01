@@ -32,4 +32,6 @@ config :lobber, Lobber.Integrations.Perplexity,
 
 config :lobber, Lobber.Tasks.Scheduler, storage: Lobber.Tasks.CaveStorage
 
-import_config "#{Mix.env()}.config.exs"
+if File.exists?("./config/#{Mix.env()}.config.exs") do
+  import_config "#{Mix.env()}.config.exs"
+end
