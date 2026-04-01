@@ -12,6 +12,7 @@ defmodule Lobber.Conversation.Compaction do
   retaining important details and dropping unimportant details or stylistic information. The point of this
   process is to allow a new agent to understand what has been spoken about without having to read the entire
   conversation history.
+  Do not retain extraneous information, only retain the important points of the conversation.
   Keep your compacted conversation brief and to the point, and start each message with "The following is a recap of this conversation:"
   """
 

@@ -31,3 +31,5 @@ config :lobber, Lobber.Integrations.Perplexity,
   sonar_model: "sonar-pro"
 
 config :lobber, Lobber.Tasks.Scheduler, storage: Lobber.Tasks.CaveStorage
+
+import_config "#{Mix.env()}.config.exs"

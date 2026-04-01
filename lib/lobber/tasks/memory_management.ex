@@ -21,6 +21,8 @@ defmodule Lobber.Tasks.MemoryManagement do
 
   Note! it is entirely valid for you to decide that memories and identity are fine as-is and leave them
   how they are.
+
+  You started dreaming at #{Lobber.Conversation.now()}
   """
 
   @impl true

@@ -41,7 +41,7 @@ defmodule Lobber.Conversation do
   defp maybe_inject_system_prompt(history) do
     system = %Message{
       role: "system",
-      content: Lobber.System.system_prompt()
+      content: "#{Lobber.System.system_prompt()}\n\nThis conversation was loaded at #{now()}"
     }
 
     [system | history]
@@ -176,8 +176,18 @@ defmodule Lobber.Conversation do
   Add a message to a conversation
   Will process the message given, then respond to the given pid
   """
+  @spec add_message(pid(), pid(), binary(), map()) :: :ok
   def add_message(conversation_pid, respond_to, message, opts) do
-    GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
+    GenServer.cast(conversation_pid, {:message, respond_to, with_timestamp(message), opts})
+  end
+
+  def with_timestamp(message) do
+    "[#{now()}] #{message}"
+  end
+
+  def now() do
+    DateTime.utc_now()
+    |> Calendar.strftime("%a, %B %d %Y at %H:%M")
   end
 
   def respond_to_channel(:do_not_reply, _), do: nil

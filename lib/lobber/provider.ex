@@ -7,6 +7,7 @@ defmodule Lobber.Provider do
   @behaviour Lobber.Provider.Behaviour
 
   alias Lobber.Provider
+  require Logger
 
   # 100% here to make sure everything gets brought in by the compiler
   @providers [
@@ -28,6 +29,7 @@ defmodule Lobber.Provider do
   """
   @impl true
   def prompt(conversation, next_message, tools) do
+    Logger.info("Calling #{provider().name()}")
     provider().prompt(conversation, next_message, tools)
   end
 
