@@ -44,7 +44,7 @@ defmodule Lobber.Conversation.Message do
           tool_call_id: tool_call_id,
           reasoning: reasoning,
           reasoning_details: reasoning_details
-        } = data
+        }
       ) do
     %{
       "role" => role,

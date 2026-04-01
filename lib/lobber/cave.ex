@@ -37,12 +37,6 @@ defmodule Lobber.Cave do
     end
   end
 
-  defp ensure_store() do
-    unless File.exists?(file_path(@store)) do
-      File.mkdir(file_path(@store))
-    end
-  end
-
   defp ensure_dirs() do
     for dir <- @ensure_dirs do
       unless File.exists?(file_path(dir)) do

@@ -4,10 +4,11 @@ config :logger,
   level: :all
 
 config :lobber,
-  cave: ".lobber/",
-  provider: Lobber.Provider.OpenRouter
+  cave: ".lobber/"
 
-config :lobber, Lobber.Provider.OpenRouter, model_id: "xiaomi/mimo-v2-flash"
+config :lobber, Lobber.Routing,
+  default: [provider: Lobber.Provider.Xiaomi, model_id: "xiaomi/mimo-v2-flash"],
+  conversation_compaction: [provider: Lobber.Provider.Xiaomi, model_id: "xiaomi/mimo-v2-flash"]
 
 if File.exists?("./config/dev.secret.exs") do
   import_config "dev.secret.exs"

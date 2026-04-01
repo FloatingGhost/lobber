@@ -13,7 +13,7 @@ defmodule Lobber.Channels.Discord.Socket do
   @heartbeat_ack_timeout 10_000
 
   def start_link(state) do
-    {channel_name, state} = Keyword.pop(state, :channel_name)
+    {channel_name, _state} = Keyword.pop(state, :channel_name)
     GenServer.start_link(__MODULE__, %{channel_name: channel_name}, name: __MODULE__)
   end
 
@@ -95,7 +95,7 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   @impl true
-  def handle_info(message, %{status: :upgrading} = state) do
+  def handle_info(_message, %{status: :upgrading} = state) do
     Logger.error("Unexpected upgrade message")
     {:stop, state}
   end
@@ -239,12 +239,12 @@ defmodule Lobber.Channels.Discord.Socket do
            type: "MESSAGE_CREATE",
            data:
              %{
-               "author" => %{"username" => username, "id" => id},
+               "author" => %{"username" => username},
                "content" => content,
                "channel_id" => channel_id
-             } = data
-         } = message,
-         %{client: client, user_id: user_id, channel_name: channel_name} = state
+             }
+         },
+         %{channel_name: channel_name} = state
        ) do
     Logger.debug("#{username}: #{content}")
 
@@ -269,7 +269,7 @@ defmodule Lobber.Channels.Discord.Socket do
          %{
            opcode: :dispatch,
            type: "MESSAGE_UPDATE"
-         } = message,
+         },
          state
        ) do
     {:noreply, state}
@@ -353,10 +353,11 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   defp handle_data(other, state) do
-    Logger.warn("Unhandled discord frame: #{other}")
+    Logger.warning("Unhandled discord frame: #{other}")
     state
   end
 
+  @impl true
   def handle_cast(
         {:conversation_response, %Conversation.Message{} = message, %{channel_id: channel_id}},
         %{client: client} = state

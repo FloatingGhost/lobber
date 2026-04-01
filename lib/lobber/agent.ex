@@ -109,7 +109,7 @@ defmodule Lobber.Agent do
     call_provider(history, last_message, tools, opts)
   end
 
-  defp run_tools(last_message, history, tools, [], opts) do
+  defp run_tools(last_message, history, tools, [], _opts) do
     {last_message, history, tools}
   end
 
@@ -133,8 +133,8 @@ defmodule Lobber.Agent do
   defp handle_tool_output(
          {:string, string},
          tool_call_id,
-         tools,
-         %{respond_to: respond_to} = opts
+         _tools,
+         %{respond_to: respond_to}
        )
        when is_binary(string) do
     tool_use = %Conversation.Message{
@@ -152,7 +152,7 @@ defmodule Lobber.Agent do
          {:add_tool, tool_name},
          tool_call_id,
          tools,
-         %{respond_to: respond_to} = opts
+         %{respond_to: respond_to}
        )
        when is_binary(tool_name) do
     to_add = Lobber.Tools.by_name(tool_name)

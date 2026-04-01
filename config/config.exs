@@ -11,18 +11,17 @@ config :tesla,
 
 config :lobber,
   cave: ".lobber/",
-  provider: Lobber.Provider.Xiaomi,
   channels: [
     Lobber.Channels.Discord
   ]
 
-config :lobber, Lobber.Provider.OpenRouter,
-  model_id: "xiaomi/mimo-v2-pro",
-  api_key: System.get_env("OPENROUTER_API_KEY")
+config :lobber, Lobber.Routing,
+  default: [provider: Lobber.Provider.Xiaomi, model_id: "xiaomi/mimo-v2-pro"],
+  conversation_compaction: [provider: Lobber.Provider.Xiaomi, model_id: "xiaomi/mimo-v2-flash"]
 
-config :lobber, Lobber.Provider.Xiaomi,
-  model_id: "mimo-v2-pro",
-  api_key: System.get_env("XIAOMI_API_KEY")
+config :lobber, Lobber.Provider.OpenRouter, api_key: System.get_env("OPENROUTER_API_KEY")
+
+config :lobber, Lobber.Provider.Xiaomi, api_key: System.get_env("XIAOMI_API_KEY")
 
 config :lobber, Lobber.Channels.Discord, bot_token: System.get_env("DISCORD_BOT_TOKEN")
 

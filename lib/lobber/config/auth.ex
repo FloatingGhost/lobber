@@ -26,7 +26,6 @@ defmodule Lobber.Config.Auth do
 
   def authorize(id) do
     Logger.info("Authorizing #{id}")
-    current = value()
 
     Agent.update(__MODULE__, fn state ->
       [id | state]

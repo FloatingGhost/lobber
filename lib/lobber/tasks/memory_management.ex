@@ -2,7 +2,6 @@ defmodule Lobber.Tasks.MemoryManagement do
   @behaviour Lobber.Tasks.Behaviour
 
   require Logger
-  alias Lobber.Conversation.Message
 
   @prompt """
   You are in a deep sleep and you are sorting through your memories.

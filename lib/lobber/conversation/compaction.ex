@@ -5,6 +5,7 @@ defmodule Lobber.Conversation.Compaction do
   """
 
   alias Lobber.Conversation.Message
+  alias Lobber.Routing
 
   @compaction_system """
   You are a conversation summariser. You will be provided with an entire conversation following this
@@ -29,7 +30,8 @@ defmodule Lobber.Conversation.Compaction do
       content: "Please summarise this conversation!"
     }
 
-    %Message{content: text} = Lobber.Provider.prompt([system | history], request, [])
+    %Message{content: text} =
+      Lobber.Provider.prompt([system | history], request, [], Routing.routing_for(__MODULE__))
 
     %Message{
       role: "user",

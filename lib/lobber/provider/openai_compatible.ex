@@ -92,7 +92,7 @@ defmodule Lobber.Provider.OpenAICompatible do
            "finish_reason" => "tool_calls",
            "message" => message
          },
-         tools,
+         _tools,
          opts
        ) do
     adapter = Keyword.get(opts, :adapter)
@@ -105,7 +105,7 @@ defmodule Lobber.Provider.OpenAICompatible do
     {:tools, message.tool_calls, history ++ [message]}
   end
 
-  defp handle_message(history, other, tools) do
+  defp handle_message(_history, other, _tools, _opts) do
     Logger.error("OpenAI failed!")
     Logger.error(inspect(other))
     :error

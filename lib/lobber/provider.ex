@@ -15,24 +15,25 @@ defmodule Lobber.Provider do
     Provider.Xiaomi
   ]
 
-  defp provider() do
-    Lobber.Config.get(:provider)
-  end
-
   def by_name(name) do
     @providers
     |> Enum.find(fn mod -> mod.name() == name end)
   end
 
   @doc """
-  Request the currently configured provider to process your request.
+  Request a provider to process your request.
+  Will either use the provider in `routing_opts`, or the `:default` if nothing is specified
   """
   @impl true
-  def prompt(conversation, next_message, tools) do
-    Logger.info("Calling #{provider().name()}")
-    provider().prompt(conversation, next_message, tools)
+  def prompt(conversation, next_message, tools, routing_opts \\ []) do
+    routing_opts = Lobber.Routing.with_defaults(routing_opts)
+    provider = Keyword.get(routing_opts, :provider)
+    model = Keyword.get(routing_opts, :model_id)
+    Logger.info("Calling #{provider.name()}")
+    provider.prompt(conversation, next_message, tools, model)
   end
 
   # we need to implement this to meet the behaviour
+  @impl true
   def name(), do: "meta"
 end

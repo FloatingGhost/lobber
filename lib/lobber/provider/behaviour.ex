@@ -5,5 +5,16 @@ defmodule Lobber.Provider.Behaviour do
 
   @callback name() :: binary()
 
-  @callback prompt(list(), binary(), list()) :: {:text, binary()} | {atom(), binary()}
+  @doc """
+  Calls the actual provider
+
+  prompt(history, next_message, tools, model_id)
+  iex> prompt([%{role: "system", content: "prompt"}], %{role: "user", content: "abc", tools, model_id})
+  """
+  @callback prompt(
+              list(Lobber.Conversation.Message.t()),
+              Lobber.Conversation.Message.t(),
+              list,
+              binary
+            ) :: {:text, binary} | {atom, binary}
 end

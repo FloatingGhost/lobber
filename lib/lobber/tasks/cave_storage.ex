@@ -37,7 +37,7 @@ defmodule Lobber.Tasks.CaveStorage do
   defp maybe_prepend_mod("Elixir." <> _mod = mod), do: mod
   defp maybe_prepend_mod(mod), do: "Elixir.#{mod}"
 
-  defp decode_job(%{"task" => task, "schedule" => schedule, "state" => state} = job) do
+  defp decode_job(%{"task" => task, "schedule" => schedule, "state" => state}) do
     Lobber.Tasks.Scheduler.new_job()
     |> Quantum.Job.set_schedule(Crontab.CronExpression.Parser.parse!(schedule))
     |> Quantum.Job.set_task({String.to_existing_atom(maybe_prepend_mod(task)), :run, []})
@@ -81,6 +81,7 @@ defmodule Lobber.Tasks.CaveStorage do
     end
   end
 
+  @impl true
   def handle_call({:last_execution_date}, _from, %{last_execution_date: nil} = state),
     do: {:reply, :unknown, state}
 
@@ -92,7 +93,7 @@ defmodule Lobber.Tasks.CaveStorage do
     |> persist()
   end
 
-  def handle_call({:jobs}, _from, %{jobs: [] = jobs} = state) do
+  def handle_call({:jobs}, _from, %{jobs: []} = state) do
     {:reply, :not_applicable, state}
   end
 
@@ -111,7 +112,7 @@ defmodule Lobber.Tasks.CaveStorage do
   end
 
   def handle_call({:purge}, _from, _state) do
-    {:reply, :ok, @initial_state}
+    {:reply, :ok, initial_state()}
     |> persist()
   end
 
@@ -143,6 +144,11 @@ defmodule Lobber.Tasks.CaveStorage do
   @impl true
   def delete_job(storage_pid, job) do
     GenServer.call(storage_pid, {:delete_job, job})
+  end
+
+  @impl true
+  def update_job_state(storage_pid, job, state) do
+    GenServer.call(storage_pid, {:update_job_state, job, state})
   end
 end
 

@@ -27,7 +27,7 @@ defmodule Lobber.Channels.Discord.Opcodes do
   end
 
   def human(opcode) do
-    h = Enum.find(@opcodes, fn {k, v} -> v == opcode end)
+    h = Enum.find(@opcodes, fn {_k, v} -> v == opcode end)
 
     if is_nil(h) do
       "Unknown Opcode"

@@ -6,6 +6,7 @@ defmodule Lobber.Tools do
   """
 
   alias Lobber.Tools
+  require Logger
 
   def list() do
     ([

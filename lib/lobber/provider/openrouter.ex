@@ -19,19 +19,16 @@ defmodule Lobber.Provider.OpenRouter do
   @impl true
   def name(), do: "openrouter"
 
-  defp model do
-    Lobber.Config.get(__MODULE__, :model_id)
-  end
-
   defp api_key do
     Lobber.Config.get(__MODULE__, :api_key)
   end
 
-  def prompt(history, next, tools) do
+  @impl true
+  def prompt(history, next, tools, model) do
     Lobber.Provider.OpenAICompatible.prompt(
       @openrouter,
       api_key(),
-      model(),
+      model,
       history,
       next,
       tools,

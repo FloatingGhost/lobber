@@ -33,7 +33,7 @@ defmodule Lobber.Conversation do
     {:ok, state}
   end
 
-  defp maybe_inject_system_prompt([%Message{role: "system"} | rest] = history) do
+  defp maybe_inject_system_prompt([%Message{role: "system"} | rest]) do
     # replace prompt with the latest version
     maybe_inject_system_prompt(rest)
   end
@@ -47,6 +47,7 @@ defmodule Lobber.Conversation do
     [system | history]
   end
 
+  @impl true
   def handle_call(:reload, _caller, %{history: history} = state) do
     Logger.info("Reloading...")
     {:reply, :ok, %{state | history: maybe_inject_system_prompt(history)}}
