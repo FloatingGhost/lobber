@@ -181,21 +181,25 @@ defmodule Lobber.Conversation do
     GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
   end
 
+  @spec with_timestamp(binary()) :: binary()
   def with_timestamp(message) do
     "[#{now()}] #{message}"
   end
 
+  @spec now() :: binary()
   def now() do
     DateTime.utc_now()
     |> Calendar.strftime("%a, %B %d %Y at %H:%M")
   end
 
-  def respond_to_channel(:do_not_reply, _), do: nil
+  @spec respond_to_channel(:do_not_reply | pid(), map()) :: :ok
+  def respond_to_channel(:do_not_reply, _), do: :ok
 
   def respond_to_channel(channel_pid, args) do
     GenServer.cast(channel_pid, args)
   end
 
+  @spec reload(pid()) :: :ok
   def reload(pid) do
     GenServer.call(pid, :reload)
   end
