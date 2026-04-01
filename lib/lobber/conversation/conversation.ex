@@ -68,7 +68,7 @@ defmodule Lobber.Conversation do
 
     message = %Message{
       role: "user",
-      content: message
+      content: with_timestamp(message)
     }
 
     {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
@@ -178,7 +178,7 @@ defmodule Lobber.Conversation do
   """
   @spec add_message(pid(), pid(), binary(), map()) :: :ok
   def add_message(conversation_pid, respond_to, message, opts) do
-    GenServer.cast(conversation_pid, {:message, respond_to, with_timestamp(message), opts})
+    GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
   end
 
   def with_timestamp(message) do
