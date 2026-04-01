@@ -24,6 +24,8 @@ we love lobber
 - Lobber's own little cave where it stores shiny rocks (markdown files) for later use
 - NO SILLY BASH EXECUTION WE'RE ALL ELIXIR ALL THE WAY DOWN
 - Dynamic context compaction via `!!compact` to keep your conversations going
+- Cool routing system to send to different providers/models based on the task type
+- Json-backed crontab to run stuff when you want to I guess
 
 ## Lobber's design
 
