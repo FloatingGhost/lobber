@@ -62,6 +62,7 @@ defmodule Lobber.Tools do
   end
 
   def run(%Lobber.Conversation.ToolCall{} = call) do
+    Logger.info("Running #{call.name}(#{Jason.encode!(call.arguments)})")
     by_name(call.name).run(call.arguments)
   end
 end
