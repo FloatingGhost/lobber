@@ -36,16 +36,14 @@ defmodule Lobber.Conversation.Message do
     |> Map.put(:reasoning_details, Map.get(data, "reasoning_details", nil))
   end
 
-  def encode(
-        %__MODULE__{
-          role: role,
-          content: content,
-          tool_calls: tool_calls,
-          tool_call_id: tool_call_id,
-          reasoning: reasoning,
-          reasoning_details: reasoning_details
-        }
-      ) do
+  def encode(%__MODULE__{
+        role: role,
+        content: content,
+        tool_calls: tool_calls,
+        tool_call_id: tool_call_id,
+        reasoning: reasoning,
+        reasoning_details: reasoning_details
+      }) do
     %{
       "role" => role,
       "content" => content

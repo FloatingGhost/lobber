@@ -73,6 +73,20 @@ defmodule Lobber.Channels.Discord.Socket do
     |> floor()
   end
 
+  defp reconnect(%{conn: conn, resume_url: websock_url} = state) do
+    :gun.shutdown(conn)
+    websock_url = URI.parse(websock_url)
+    {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
+
+    {:noreply,
+     %{
+       state
+       | conn: conn,
+         ref: nil,
+         status: :connecting
+     }}
+  end
+
   @impl true
   def handle_info({:gun_up, _pid, _opts}, %{status: :connecting, conn: conn} = state) do
     Logger.debug("Upgrading to websocket")
@@ -133,30 +147,11 @@ defmodule Lobber.Channels.Discord.Socket do
 
   def handle_info(
         :heartbeat_ack_check,
-        %{
-          heartbeat_acknowledged: false,
-          resume_url: websock_url,
-          conn: conn,
-          ref: ref
-        } = state
+        state
       ) do
     Logger.debug("oops! Heartbeat was not acknowledged. We have to reconnect...")
 
-    :ok = :gun.shutdown(conn)
-
-    websock_url = URI.parse(websock_url)
-
-    Logger.debug("Initiating connection to #{websock_url.host}")
-    {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
-    Logger.debug("Connection established")
-
-    {:noreply,
-     %{
-       state
-       | conn: conn,
-         ref: ref,
-         status: :connecting
-     }}
+    reconnect(state)
   end
 
   def handle_info(
@@ -237,12 +232,11 @@ defmodule Lobber.Channels.Discord.Socket do
          %{
            opcode: :dispatch,
            type: "MESSAGE_CREATE",
-           data:
-             %{
-               "author" => %{"username" => username},
-               "content" => content,
-               "channel_id" => channel_id
-             }
+           data: %{
+             "author" => %{"username" => username},
+             "content" => content,
+             "channel_id" => channel_id
+           }
          },
          %{channel_name: channel_name} = state
        ) do
@@ -350,6 +344,15 @@ defmodule Lobber.Channels.Discord.Socket do
     next_hb = next_heartbeat(heartbeat)
     Process.send_after(self(), :heartbeat, next_hb)
     %{state | heartbeat_acknowledged: true}
+  end
+
+  defp handle_data(
+         %DiscordMessage{
+           opcode: :reconnect
+         },
+         state
+       ) do
+    reconnect(state)
   end
 
   defp handle_data(other, state) do
