@@ -74,6 +74,7 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   defp reconnect(%{conn: conn, resume_url: websock_url} = state) do
+    Logger.info("Reconnecting to #{websock_url}...")
     :gun.shutdown(conn)
     websock_url = URI.parse(websock_url)
     {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
