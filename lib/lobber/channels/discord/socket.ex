@@ -148,19 +148,19 @@ defmodule Lobber.Channels.Discord.Socket do
 
   def handle_info(
         :heartbeat_ack_check,
+        %{heartbeat_acknowledged: true} = state
+      ) do
+    Logger.debug("We're good")
+    {:noreply, state}
+  end
+
+  def handle_info(
+        :heartbeat_ack_check,
         state
       ) do
     Logger.debug("oops! Heartbeat was not acknowledged. We have to reconnect...")
 
     reconnect(state)
-  end
-
-  def handle_info(
-        :heartbeat_ack_check,
-        %{heartbeat_acknowledged: true} = state
-      ) do
-    Logger.debug("We're good")
-    {:noreply, state}
   end
 
   @impl true
