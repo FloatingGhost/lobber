@@ -8,8 +8,8 @@ defmodule Lobber.Channels.Discord.Socket do
 
   alias Lobber.Channels.Discord.DiscordMessage
   alias Lobber.Conversation
+  alias Lobber.Channels.Discord.Client
 
-  @discord "https://discord.com"
   @heartbeat_ack_timeout 10_000
 
   def start_link(state) do
@@ -21,13 +21,7 @@ defmodule Lobber.Channels.Discord.Socket do
   def init(%{channel_name: channel_name}) do
     Logger.info("Starting discord...")
 
-    client =
-      Tesla.client([
-        {Tesla.Middleware.BaseUrl, @discord},
-        {Tesla.Middleware.Headers, [{"content-type", "application/json"} | headers()]},
-        Tesla.Middleware.JSON,
-        {Tesla.Middleware.Timeout, timeout: 10_000}
-      ])
+    client = Client.client()
 
     %{"url" => websock_url} = Tesla.get!(client, "/api/gateway/bot").body
 
@@ -44,8 +38,6 @@ defmodule Lobber.Channels.Discord.Socket do
        conn: conn,
        ref: nil,
        status: :connecting,
-       resp_headers: nil,
-       resp_status: nil,
        data: nil,
        heartbeat_interval: nil,
        sequence_number: nil,
@@ -53,19 +45,9 @@ defmodule Lobber.Channels.Discord.Socket do
        heartbeat_acknowledged: true,
        session_id: nil,
        client: client,
-       user_id: nil
+       user_id: nil,
+       application_id: nil
      }}
-  end
-
-  defp bot_token do
-    Lobber.Config.get(Lobber.Channels.Discord, :bot_token)
-  end
-
-  defp headers do
-    [
-      {"user-agent", "YuiBot (application 182675940042735616)"},
-      {"authorization", "Bot #{bot_token()}"}
-    ]
   end
 
   defp next_heartbeat(interval) do
@@ -90,7 +72,7 @@ defmodule Lobber.Channels.Discord.Socket do
   @impl true
   def handle_info({:gun_up, _pid, _opts}, %{status: :connecting, conn: conn} = state) do
     Logger.debug("Upgrading to websocket")
-    ref = :gun.ws_upgrade(conn, "/?v=10&encoding=json", headers())
+    ref = :gun.ws_upgrade(conn, "/?v=10&encoding=json", Client.headers())
 
     {
       :noreply,
@@ -102,9 +84,15 @@ defmodule Lobber.Channels.Discord.Socket do
   def handle_info({:gun_upgrade, _pid, _ref, _, _}, %{status: :upgrading} = state) do
     Logger.debug("Upgraded")
 
+    # once we're up and have confirmed valid creds, we can start command registration
+    # this shouldn't be in our context though, we do not care if it completes
+    Task.start(Lobber.Channels.Discord.Commands, :create_commands, [])
+    my_id = Lobber.Channels.Discord.Commands.my_id()
+    Logger.info("We are #{my_id}")
+
     {
       :noreply,
-      %{state | status: :connected}
+      %{state | status: :connected, application_id: my_id}
     }
   end
 
@@ -246,7 +234,7 @@ defmodule Lobber.Channels.Discord.Socket do
        ) do
     Logger.debug("#{username}: #{content}")
 
-    case Lobber.Conversations.get_or_spawn(channel_name, channel_id) do
+    case with_conversation(channel_name, channel_id, state) do
       {:ok, conversation} ->
         Lobber.Conversation.add_message(
           conversation,
@@ -257,8 +245,44 @@ defmodule Lobber.Channels.Discord.Socket do
 
         state
 
-      {:error, :needs_auth, id} ->
-        send_message(state.client, channel_id, "LOBBER NEED AUTH! Pair with id #{id} pls :<")
+      :error ->
+        state
+    end
+  end
+
+  defp handle_data(
+         %{opcode: :dispatch, type: "INTERACTION_CREATE", data: data},
+         %{channel_name: channel_name} = state
+       ) do
+    %{
+      "id" => interaction_id,
+      "token" => interaction_token,
+      "data" => cmd_data,
+      "channel_id" => channel_id
+    } = data
+
+    case with_conversation(channel_name, channel_id, state) do
+      {:ok, conversation} ->
+        callback = "/api/v10/interactions/#{interaction_id}/#{interaction_token}/callback"
+
+        {:ok, data} =
+          Tesla.post(Client.client(), callback, %{
+            type: 4,
+            data: %{
+              content: "Started!"
+            }
+          })
+
+        Lobber.Conversation.add_message(
+          conversation,
+          self(),
+          Lobber.Channels.Discord.Commands.format(cmd_data),
+          %{channel_id: channel_id}
+        )
+
+        state
+
+      :error ->
         state
     end
   end
@@ -292,7 +316,7 @@ defmodule Lobber.Channels.Discord.Socket do
         %DiscordMessage{
           opcode: :identify,
           data: %{
-            token: bot_token(),
+            token: Client.bot_token(),
             properties: %{
               os: "Linux",
               browser: "YuiBot",
@@ -321,7 +345,7 @@ defmodule Lobber.Channels.Discord.Socket do
         %DiscordMessage{
           opcode: :resume,
           data: %{
-            token: bot_token(),
+            token: Client.bot_token(),
             session_id: state.session_id,
             seq: state.sequence_number
           }
@@ -360,7 +384,7 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   defp handle_data(other, state) do
-    Logger.warning("Unhandled discord frame: #{other}")
+    Logger.warning("Unhandled discord frame: #{inspect(other)}")
     state
   end
 
@@ -384,5 +408,16 @@ defmodule Lobber.Channels.Discord.Socket do
       "/api/v10/channels/#{channel_id}/messages",
       body
     )
+  end
+
+  defp with_conversation(channel_name, channel_id, state) do
+    case Lobber.Conversations.get_or_spawn(channel_name, channel_id) do
+      {:ok, conversation} ->
+        {:ok, conversation}
+
+      {:error, :needs_auth, id} ->
+        send_message(state.client, channel_id, "LOBBER NEED AUTH! Pair with id #{id} pls :<")
+        :error
+    end
   end
 end

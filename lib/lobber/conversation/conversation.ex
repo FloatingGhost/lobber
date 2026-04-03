@@ -22,7 +22,9 @@ defmodule Lobber.Conversation do
       __MODULE__,
       %{
         history: history,
-        id: id
+        id: id,
+        provider: nil,
+        model_id: nil
       },
       name: name
     )
@@ -83,7 +85,11 @@ defmodule Lobber.Conversation do
     opts = %{
       agent_opts: agent_opts,
       respond_to: respond_to,
-      channel_opts: opts
+      channel_opts: opts,
+      routing: [
+        provider: state.provider,
+        model_id: state.model_id
+      ]
     }
 
     # spin off an async task to handle the actual processing
@@ -161,6 +167,25 @@ defmodule Lobber.Conversation do
     Lobber.Cave.backup_conversation(id, new_history)
 
     command_response("Conversation compacted", %{state | history: new_history}, opts)
+  end
+
+  defp handle_command("provider" <> provider, state, opts) do
+    provider =
+      provider
+      |> String.trim()
+      |> String.to_existing_atom()
+
+    command_response(
+      "Provider changed to #{provider.name()}",
+      %{state | provider: provider},
+      opts
+    )
+  end
+
+  defp handle_command("model_id" <> model, state, opts) do
+    model = String.trim(model)
+
+    command_response("Model changed to #{model}", %{state | model_id: model}, opts)
   end
 
   defp handle_command(cmd, state, opts) do

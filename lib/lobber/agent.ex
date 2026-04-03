@@ -56,11 +56,13 @@ defmodule Lobber.Agent do
 
   def prompt(respond_to, messages, next_message, opts) do
     starting_tools = Map.get(opts, :starting_tools, @starting_tools)
+    routing_options = Map.get(opts, :routing, [])
 
     Task.Supervisor.start_child(supervisor(), fn ->
       case call_provider(messages, next_message, starting_tools, %{
              respond_to: respond_to,
-             turns: 0
+             turns: 0,
+             routing: routing_options
            }) do
         {:ok, text} ->
           GenServer.cast(respond_to, {:agent_response, text, opts})
@@ -80,8 +82,8 @@ defmodule Lobber.Agent do
     {:error, :too_many_turns}
   end
 
-  defp call_provider(messages, next_message, tools, %{turns: turns} = opts) do
-    Lobber.Provider.prompt(messages, next_message, tools)
+  defp call_provider(messages, next_message, tools, %{turns: turns, routing: routing} = opts) do
+    Lobber.Provider.prompt(messages, next_message, tools, routing)
     |> handle_provider_response(messages, tools, %{opts | turns: turns + 1})
   end
 

@@ -42,6 +42,6 @@ defmodule Lobber.Routing do
   """
   def with_defaults(opts) do
     default_routing()
-    |> Keyword.merge(opts)
+    |> Keyword.merge(Keyword.reject(opts, fn {_k, val} -> is_nil(val) end))
   end
 end

@@ -20,6 +20,10 @@ defmodule Lobber.Provider do
     |> Enum.find(fn mod -> mod.name() == name end)
   end
 
+  def list() do
+    @providers
+  end
+
   @doc """
   Request a provider to process your request.
   Will either use the provider in `routing_opts`, or the `:default` if nothing is specified
@@ -29,7 +33,7 @@ defmodule Lobber.Provider do
     routing_opts = Lobber.Routing.with_defaults(routing_opts)
     provider = Keyword.get(routing_opts, :provider)
     model = Keyword.get(routing_opts, :model_id)
-    Logger.info("Calling #{provider.name()}")
+    Logger.info("Calling #{model}@#{provider.name()}")
     provider.prompt(conversation, next_message, tools, model)
   end
 
