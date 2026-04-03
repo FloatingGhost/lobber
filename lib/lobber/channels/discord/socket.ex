@@ -79,13 +79,12 @@ defmodule Lobber.Channels.Discord.Socket do
     websock_url = URI.parse(websock_url)
     {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
 
-    {:noreply,
-     %{
-       state
-       | conn: conn,
-         ref: nil,
-         status: :connecting
-     }}
+    %{
+      state
+      | conn: conn,
+        ref: nil,
+        status: :connecting
+    }
   end
 
   @impl true
@@ -107,6 +106,10 @@ defmodule Lobber.Channels.Discord.Socket do
       :noreply,
       %{state | status: :connected}
     }
+  end
+
+  def handle_info({:gun_down, _pid, :ws, _reason, _ref}, state) do
+    {:noreply, reconnect(state)}
   end
 
   @impl true
@@ -160,7 +163,7 @@ defmodule Lobber.Channels.Discord.Socket do
       ) do
     Logger.debug("oops! Heartbeat was not acknowledged. We have to reconnect...")
 
-    reconnect(state)
+    {:noreply, reconnect(state)}
   end
 
   @impl true
@@ -267,7 +270,7 @@ defmodule Lobber.Channels.Discord.Socket do
          },
          state
        ) do
-    {:noreply, state}
+    state
   end
 
   defp handle_data(
