@@ -29,6 +29,7 @@ defmodule Lobber.Tasks.MemoryManagement do
     Logger.info("Running deep sleep memory consolidation...")
 
     {:ok, conversation} = Lobber.Conversations.get_or_spawn("system", "memory_consolidation")
+    :ok = Lobber.Conversation.clear(conversation)
     :ok = Lobber.Conversation.reload(conversation)
 
     Lobber.Conversation.add_message(
@@ -40,7 +41,7 @@ defmodule Lobber.Tasks.MemoryManagement do
           starting_tools: [
             Lobber.Tools.Remember,
             Lobber.Tools.UpdateMemory,
-            Lobber.Tools.RemoveMemory,
+            Lobber.Tools.RemoveMemories,
             Lobber.Tools.ListMemories,
             Lobber.Tools.AddIdentity,
             Lobber.Tools.ReplaceIdentity

@@ -16,7 +16,7 @@ defmodule Lobber.Agent do
     Lobber.Tools.AddTool,
     Lobber.Tools.Remember,
     Lobber.Tools.UpdateMemory,
-    Lobber.Tools.RemoveMemory,
+    Lobber.Tools.RemoveMemories,
     Lobber.Tools.ListMemories,
     Lobber.Tools.SummariseWeb,
     Lobber.Tools.SearchWeb,

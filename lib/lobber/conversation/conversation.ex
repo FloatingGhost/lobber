@@ -54,6 +54,12 @@ defmodule Lobber.Conversation do
   end
 
   @impl true
+  def handle_call(:clear, _caller, state) do
+    Logger.info("Reloading...")
+    {:reply, :ok, %{state | history: maybe_inject_system_prompt([])}}
+  end
+
+  @impl true
   def handle_cast(
         {:message, respond_to, "!!" <> command, opts},
         state
@@ -203,5 +209,10 @@ defmodule Lobber.Conversation do
   @spec reload(pid()) :: :ok
   def reload(pid) do
     GenServer.call(pid, :reload)
+  end
+
+  @spec clear(pid()) :: :ok
+  def clear(pid) do
+    GenServer.call(pid, :clear)
   end
 end

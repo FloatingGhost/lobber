@@ -207,31 +207,28 @@ defmodule Lobber.Cave do
     end
   end
 
-  @doc """
-  Remove a memory by its ID (line number)
-  Returns :ok or {:error, reason}
-  """
-  def remove_memory(memory_id) when is_binary(memory_id) do
-    {id, _} = Integer.parse(memory_id)
-    remove_memory(id)
+  defp maybe_int(id) when is_integer(id), do: id
+
+  defp maybe_int(id) do
+    {id, _} = Integer.parse(id)
+    id
   end
 
-  def remove_memory(memory_id) when is_integer(memory_id) and memory_id > 0 do
+  def remove_memories(memory_ids) do
+    memory_ids = Enum.map(memory_ids, &maybe_int/1)
     memories_path = file_path(@memories)
 
     case File.read(memories_path) do
       {:ok, content} ->
-        lines = String.split(content, "\n")
+        new_content =
+          content
+          |> String.split("\n")
+          |> Enum.with_index(1)
+          |> Enum.reject(fn {_value, index} -> Enum.member?(memory_ids, index) end)
+          |> Enum.map_join("\n", fn {value, _index} -> value end)
 
-        if memory_id > length(lines) do
-          {:error, :not_found}
-        else
-          # Remove the line at the given position
-          new_lines = List.delete_at(lines, memory_id - 1)
-          new_content = Enum.join(new_lines, "\n")
-          File.write(memories_path, new_content)
-          :ok
-        end
+        File.write(memories_path, new_content)
+        :ok
 
       {:error, reason} ->
         {:error, "Could not read memories: #{reason}"}

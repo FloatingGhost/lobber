@@ -1,8 +1,8 @@
-defmodule Lobber.Tools.RemoveMemory do
+defmodule Lobber.Tools.RemoveMemories do
   @moduledoc false
   @behaviour Lobber.Tool.Behaviour
 
-  def name(), do: "remove_memory"
+  def name(), do: "remove_memories"
 
   def description(),
     do: """
@@ -13,22 +13,28 @@ defmodule Lobber.Tools.RemoveMemory do
 
   def parameters(),
     do: %{
-      memory_id: %{
-        type: "integer",
-        description: "The ID of the memory to remove (from list_memories)"
+      memory_ids: %{
+        type: "array",
+        items: %{
+          type: "integer"
+        },
+        description: "A list of ids remove from memories (from list_memories)"
       }
     }
 
-  def run(%{"memory_id" => memory_id}) do
-    case Lobber.Cave.remove_memory(memory_id) do
+  def run(%{"memory_ids" => memory_ids}) when is_binary(memory_ids) do
+    # The model is being a moron
+    {:ok, memory_ids} = Jason.decode(memory_ids)
+    run(%{"memory_ids" => memory_ids})
+  end
+
+  def run(%{"memory_ids" => memory_ids}) when is_list(memory_ids) do
+    case Lobber.Cave.remove_memories(memory_ids) do
       :ok ->
         {:string, new_memories} = Lobber.Tools.ListMemories.run(nil)
 
         {:string,
-         "Memory ##{memory_id} removed from cave! Lobber forget that one. \n#{new_memories}"}
-
-      {:error, :not_found} ->
-        {:string, "Memory ##{memory_id} not found! Use list_memories to see valid IDs."}
+         "Memories #{Enum.join(memory_ids, ", ")} removed from cave! Lobber forget those ones. \n#{new_memories}"}
 
       {:error, reason} ->
         {:string, "Error removing memory: #{reason}"}
