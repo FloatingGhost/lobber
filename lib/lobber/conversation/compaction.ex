@@ -38,4 +38,36 @@ defmodule Lobber.Conversation.Compaction do
       content: text
     }
   end
+
+  @spec partially_compact(list(Message.t()), integer) :: list(Message.t())
+  def partially_compact(history, leg_retention) do
+    {remaining_history, to_compact} = split_legs(history, leg_retention)
+
+    msg =
+      to_compact
+      |> Enum.reverse()
+      |> compact()
+
+    [msg | Enum.reverse(remaining_history)]
+  end
+
+  @spec split_legs(list(Message.t()), integer) :: {list(Message.t()), list(Message.t())}
+  defp split_legs([%Message{role: "system"} | rest], to_retain) do
+    messages = Enum.reverse(rest)
+    split_at = find_split_point(messages, to_retain, 0, 0)
+    Enum.split(messages, split_at)
+  end
+
+  @spec find_split_point(list(Message.t()), integer, integer, integer) :: integer
+  defp find_split_point(_, to_retain, to_retain, index), do: index
+
+  defp find_split_point([%Message{role: "user"} | rest], to_retain, seen, index) do
+    find_split_point(rest, to_retain, seen + 1, index + 1)
+  end
+
+  defp find_split_point([_ | rest], to_retain, seen, index) do
+    find_split_point(rest, to_retain, seen, index + 1)
+  end
+
+  defp find_split_point([], _, _, index), do: index
 end

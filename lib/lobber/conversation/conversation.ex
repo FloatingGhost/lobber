@@ -58,9 +58,7 @@ defmodule Lobber.Conversation do
     {:reply, :ok,
      %{
        state
-       | history: maybe_inject_system_prompt(history),
-         processing: false,
-         pending_messages: :queue.new()
+       | history: maybe_inject_system_prompt(history)
      }}
   end
 
@@ -75,6 +73,10 @@ defmodule Lobber.Conversation do
          processing: false,
          pending_messages: :queue.new()
      }}
+  end
+
+  def handle_call(:history, _caller, %{history: history} = state) do
+    {:reply, history, state}
   end
 
   @impl true
@@ -136,7 +138,7 @@ defmodule Lobber.Conversation do
     respond_to_channel(respond_to, {:conversation_response, message, channel_opts})
 
     state = %{state | history: concat_and_backup_messages(id, history, message)}
-    {:noreply, drain_pending(state)}
+    {:noreply, drain_next_or_compact(state)}
   end
 
   @impl true
@@ -155,7 +157,7 @@ defmodule Lobber.Conversation do
 
     respond_to_channel(respond_to, {:conversation_response, error_message, channel_opts})
 
-    {:noreply, drain_pending(state)}
+    {:noreply, drain_next_or_compact(state)}
   end
 
   @impl true
@@ -174,6 +176,22 @@ defmodule Lobber.Conversation do
     concat = concat_messages(history, next)
     Lobber.Cave.backup_conversation(id, concat)
     concat
+  end
+
+  defp drain_next_or_compact(state) do
+    state =
+      if should_compact?(state) do
+        Logger.info("Context limit reached, compacting conversation #{state.id}...")
+
+        new_history =
+          Lobber.Conversation.Compaction.partially_compact(state.history, leg_retention())
+
+        %{state | history: new_history}
+      else
+        state
+      end
+
+    drain_pending(state)
   end
 
   defp drain_pending(%{pending_messages: pending} = state) do
@@ -214,7 +232,7 @@ defmodule Lobber.Conversation do
 
     command_response(
       "Conversation reloaded",
-      %{state | history: history },
+      %{state | history: history},
       opts
     )
   end
@@ -328,5 +346,22 @@ defmodule Lobber.Conversation do
   @spec clear(pid()) :: :ok
   def clear(pid) do
     GenServer.call(pid, :clear)
+  end
+
+  defp size(%{history: history}) do
+    history
+    |> Enum.reduce(0, fn %Message{content: content}, acc -> acc + String.length(content) end)
+  end
+
+  defp should_compact?(state) do
+    size(state) >= compaction_threshold()
+  end
+
+  defp compaction_threshold() do
+    Lobber.Config.get(__MODULE__, :compaction_threshold)
+  end
+
+  defp leg_retention() do
+    Lobber.Config.get(__MODULE__, :leg_retention)
   end
 end

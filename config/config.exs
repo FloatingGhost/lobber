@@ -15,6 +15,11 @@ config :lobber,
     Lobber.Channels.Discord
   ]
 
+config :lobber, Lobber.Conversation,
+  compaction_threshold: 50_000,
+  # how many user-agent turns should be kept?
+  leg_retention: 2
+
 config :lobber, Lobber.Routing,
   default: [provider: Lobber.Provider.Xiaomi, model_id: "xiaomi/mimo-v2-pro"],
   conversation_compaction: [provider: Lobber.Provider.Xiaomi, model_id: "xiaomi/mimo-v2-flash"]

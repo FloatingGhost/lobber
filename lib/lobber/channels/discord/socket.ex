@@ -265,7 +265,7 @@ defmodule Lobber.Channels.Discord.Socket do
       {:ok, conversation} ->
         callback = "/api/v10/interactions/#{interaction_id}/#{interaction_token}/callback"
 
-        {:ok, data} =
+        {:ok, _data} =
           Tesla.post(Client.client(), callback, %{
             type: 4,
             data: %{
