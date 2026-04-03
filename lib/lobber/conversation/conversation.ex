@@ -24,7 +24,9 @@ defmodule Lobber.Conversation do
         history: history,
         id: id,
         provider: nil,
-        model_id: nil
+        model_id: nil,
+        processing: false,
+        pending_messages: :queue.new()
       },
       name: name
     )
@@ -52,13 +54,27 @@ defmodule Lobber.Conversation do
   @impl true
   def handle_call(:reload, _caller, %{history: history} = state) do
     Logger.info("Reloading...")
-    {:reply, :ok, %{state | history: maybe_inject_system_prompt(history)}}
+
+    {:reply, :ok,
+     %{
+       state
+       | history: maybe_inject_system_prompt(history),
+         processing: false,
+         pending_messages: :queue.new()
+     }}
   end
 
   @impl true
   def handle_call(:clear, _caller, state) do
-    Logger.info("Reloading...")
-    {:reply, :ok, %{state | history: maybe_inject_system_prompt([])}}
+    Logger.info("Clearing...")
+
+    {:reply, :ok,
+     %{
+       state
+       | history: maybe_inject_system_prompt([]),
+         processing: false,
+         pending_messages: :queue.new()
+     }}
   end
 
   @impl true
@@ -72,17 +88,30 @@ defmodule Lobber.Conversation do
   end
 
   @impl true
-  def handle_cast({:message, respond_to, message, opts}, %{id: id, history: history} = state) do
+  def handle_cast(
+        {:message, respond_to, message, opts},
+        %{processing: true, pending_messages: pending} = state
+      ) do
+    Logger.info("Queuing message (agent busy): #{message}")
+    pending = :queue.in({message, respond_to, opts}, pending)
+    {:noreply, %{state | pending_messages: pending}}
+  end
+
+  @impl true
+  def handle_cast(
+        {:message, respond_to, message, opts},
+        %{id: id, history: history, processing: false} = state
+      ) do
     Logger.info("Message: #{message}")
 
-    message = %Message{
+    msg = %Message{
       role: "user",
       content: with_timestamp(message)
     }
 
     {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
     # wrap opts in our own layer so we know who to respond to
-    opts = %{
+    agent_opts = %{
       agent_opts: agent_opts,
       respond_to: respond_to,
       channel_opts: opts,
@@ -92,10 +121,9 @@ defmodule Lobber.Conversation do
       ]
     }
 
-    # spin off an async task to handle the actual processing
-    Lobber.Agent.prompt(self(), history, message, opts)
+    Lobber.Agent.prompt(self(), history, msg, agent_opts)
 
-    {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
+    {:noreply, %{state | history: concat_and_backup_messages(id, history, msg), processing: true}}
   end
 
   @impl true
@@ -107,7 +135,27 @@ defmodule Lobber.Conversation do
 
     respond_to_channel(respond_to, {:conversation_response, message, channel_opts})
 
-    {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
+    state = %{state | history: concat_and_backup_messages(id, history, message)}
+    {:noreply, drain_pending(state)}
+  end
+
+  @impl true
+  def handle_cast(
+        {:agent_error, error, opts},
+        %{id: id} = state
+      ) do
+    Logger.error("Agent error for #{id}: #{inspect(error)}")
+
+    %{respond_to: respond_to, channel_opts: channel_opts} = opts
+
+    error_message = %Message{
+      role: "system",
+      content: "Something went wrong: #{inspect(error)}"
+    }
+
+    respond_to_channel(respond_to, {:conversation_response, error_message, channel_opts})
+
+    {:noreply, drain_pending(state)}
   end
 
   @impl true
@@ -128,17 +176,58 @@ defmodule Lobber.Conversation do
     concat
   end
 
+  defp drain_pending(%{pending_messages: pending} = state) do
+    case :queue.out(pending) do
+      {{:value, {message, respond_to, opts}}, rest} ->
+        state = %{state | pending_messages: rest}
+
+        msg = %Message{
+          role: "user",
+          content: with_timestamp(message)
+        }
+
+        {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
+
+        agent_opts = %{
+          agent_opts: agent_opts,
+          respond_to: respond_to,
+          channel_opts: opts,
+          routing: [
+            provider: state.provider,
+            model_id: state.model_id
+          ]
+        }
+
+        Lobber.Agent.prompt(self(), state.history, msg, agent_opts)
+
+        %{state | history: concat_and_backup_messages(state.id, state.history, msg)}
+
+      {:empty, _} ->
+        %{state | processing: false}
+    end
+  end
+
   defp handle_command("reload", %{id: id, history: history} = state, opts) do
     Lobber.Cave.reload()
     history = maybe_inject_system_prompt(history)
     Lobber.Cave.backup_conversation(id, history)
-    command_response("Conversation reloaded", %{state | history: history}, opts)
+
+    command_response(
+      "Conversation reloaded",
+      %{state | history: history },
+      opts
+    )
   end
 
   defp handle_command("clear", %{id: id} = state, opts) do
     history = maybe_inject_system_prompt([])
     Lobber.Cave.backup_conversation(id, history)
-    command_response("Conversation cleared", %{state | history: history}, opts)
+
+    command_response(
+      "Conversation cleared",
+      %{state | history: history, processing: false, pending_messages: :queue.new()},
+      opts
+    )
   end
 
   defp handle_command("promotemod" <> mod, state, opts) do
