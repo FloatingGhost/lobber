@@ -61,11 +61,12 @@ defmodule Lobber.Channels.Discord.Socket do
     websock_url = URI.parse(websock_url)
     {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
 
+    # reconnects don't need an upgrade
     %{
       state
       | conn: conn,
         ref: nil,
-        status: :connecting
+        status: :upgrading
     }
   end
 
