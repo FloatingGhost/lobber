@@ -3,26 +3,34 @@ defmodule Lobber.Tasks.MemoryManagement do
 
   require Logger
 
-  @prompt """
-  You are in a deep sleep and you are sorting through your memories.
-  You should use this time to consider which memories are still important.
+  def prompt() do
+    """
+    You are in a deep sleep and you are sorting through your memories.
+    You should use this time to consider which memories are still important.
 
-  You should remove memories that are:
-  - too old to be relevent
-  - older than contradictory memories
-  - just not that useful to keep around, either low information or too specific to be useful
+    You should remove memories that are:
+    - too old to be relevent
+    - older than contradictory memories
+    - just not that useful to keep around, either low information or too specific to be useful
 
-  You should reformat messages that were stored with extraneous information.
+    You should reformat messages that were stored with extraneous information.
 
-  Then, you should do the same with your identity - you will wake up knowing who you are better
-  than you do now. Apply the same methodology and replace your identity with a new version if
-  you deem it worthwhile.
+    Then, you should do the same with your identity - you will wake up knowing who you are better
+    than you do now. Apply the same methodology and replace your identity with a new version if
+    you deem it worthwhile.
 
-  Note! it is entirely valid for you to decide that memories and identity are fine as-is and leave them
-  how they are.
+    You will also be given recent conversations, which you may opt to save memories from at this point.
 
-  You started dreaming at #{Lobber.Conversation.now()}
-  """
+    Note! it is entirely valid for you to decide that memories and identity are fine as-is and leave them
+    how they are.
+
+    You started dreaming at #{Lobber.Conversation.now()}
+
+    Today's conversation history:
+
+    #{Lobber.Cave.todays_conversation_history()}
+    """
+  end
 
   @impl true
   def run() do
@@ -35,7 +43,7 @@ defmodule Lobber.Tasks.MemoryManagement do
     Lobber.Conversation.add_message(
       conversation,
       :do_not_reply,
-      @prompt,
+      prompt(),
       %{
         agent_options: [
           starting_tools: [

@@ -324,4 +324,40 @@ defmodule Lobber.Cave do
     |> file_path()
     |> File.write(data)
   end
+
+  def todays_conversation_history() do
+    # list all conversations that have an mtime in the past 24 hours
+    cave()
+    |> Path.join(@conversations)
+    |> Path.join("/*.json")
+    |> Path.wildcard()
+    |> Enum.filter(fn fname ->
+      {:ok, %{mtime: {dtuple, ttuple}}} = File.stat(fname)
+      {:ok, date} = Date.from_erl(dtuple)
+      {:ok, time} = Time.from_erl(ttuple)
+      {:ok, dt} = DateTime.new(date, time)
+
+      DateTime.diff(DateTime.utc_now(), dt, :hour) < 24
+    end)
+    |> Enum.reject(fn fname ->
+      fname
+      |> Path.basename()
+      |> String.starts_with?("system:")
+    end)
+    |> Enum.map(&File.read!/1)
+    |> Enum.map(&Jason.decode!/1)
+    |> Enum.map(fn conversation ->
+      conversation
+      |> Enum.map(&Lobber.Conversation.Message.decode/1)
+      |> Enum.filter(fn message -> Enum.member?(["user", "assistant"], message.role) end)
+      |> Enum.filter(fn %{content: content} ->
+        content
+        |> String.trim()
+        |> String.length()
+        |> Kernel.>(0)
+      end)
+      |> Enum.map_join("\n", fn %{role: role, content: content} -> "#{role}: #{content}" end)
+    end)
+    |> Enum.join("==============\n")
+  end
 end

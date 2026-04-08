@@ -34,7 +34,8 @@ defmodule Lobber.MixProject do
       {:gun, "~> 2.2"},
       {:idna, "~> 6.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:quantum, "~> 3.5"}
+      {:quantum, "~> 3.5"},
+      {:nanoid, "~> 2.1"}
     ]
   end
 
