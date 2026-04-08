@@ -1,6 +1,13 @@
 defmodule Lobber.Channels.Discord.Socket do
   @moduledoc """
   Primary implementation against discord's websocket gateway
+
+  state transitions:
+  connecting
+    -> upgrading
+      -> connected
+        -> closing_for_reconnect
+          <-- to start
   """
   use GenServer
 
