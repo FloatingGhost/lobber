@@ -138,7 +138,10 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   def handle_info({:gun_ws, _pid, _ref, frame}, %{status: :connected} = state) do
-    {:noreply, handle_frame(frame, state)}
+    case handle_frame(frame, state) do
+      {:stop, _, _} = stop_frame -> stop_frame
+      %{} = new_state -> {:noreply, new_state}
+    end
   end
 
   # we tried to gracefully close the websocket but didn't get a confirm
@@ -159,7 +162,6 @@ defmodule Lobber.Channels.Discord.Socket do
         :reconnect_timeout,
         state
       ) do
-
     {:noreply, state}
   end
 
