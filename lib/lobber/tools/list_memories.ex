@@ -20,11 +20,7 @@ defmodule Lobber.Tools.ListMemories do
         {:string, "No memories stored yet. Cave is empty!"}
 
       {:ok, memories} ->
-        formatted =
-          memories
-          |> Enum.map_join("\n", fn {id, content} -> "[#{id}] #{content}" end)
-
-        {:string, "Lobber's memories:\n#{formatted}"}
+        {:string, "Lobber's memories:\n#{memories}"}
 
       {:error, reason} ->
         {:string, "Error listing memories: #{reason}"}
