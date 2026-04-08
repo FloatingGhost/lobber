@@ -10,8 +10,6 @@ defmodule Lobber.Channels.Discord.Socket do
   alias Lobber.Conversation
   alias Lobber.Channels.Discord.Client
 
-  @heartbeat_ack_timeout 10_000
-
   def start_link(state) do
     {channel_name, _state} = Keyword.pop(state, :channel_name)
     GenServer.start_link(__MODULE__, %{channel_name: channel_name}, name: __MODULE__)
@@ -55,13 +53,13 @@ defmodule Lobber.Channels.Discord.Socket do
     |> floor()
   end
 
-  defp reconnect(%{conn: conn, resume_url: websock_url} = state) do
+  defp reconnect(%{conn: conn, ref: ref, resume_url: websock_url} = state) do
     Logger.info("Reconnecting to #{websock_url}...")
+    :gun.ws_send(conn, ref, {:close, 4000, nil})
     :gun.shutdown(conn)
     websock_url = URI.parse(websock_url)
     {:ok, conn} = :gun.open(to_charlist(websock_url.host), 443, %{protocols: [:http]})
 
-    # reconnects don't need an upgrade
     %{
       state
       | conn: conn,
@@ -129,7 +127,6 @@ defmodule Lobber.Channels.Discord.Socket do
 
     :ok = :gun.ws_send(conn, websocket_ref, {:text, hb_frame})
 
-    Process.send_after(self(), :heartbeat_ack_check, @heartbeat_ack_timeout)
     {:noreply, %{state | heartbeat_acknowledged: false}}
   end
 
@@ -137,24 +134,6 @@ defmodule Lobber.Channels.Discord.Socket do
         :heartbeat,
         %{heartbeat_acknowledged: false} = state
       ) do
-    # if we reconnected, don't bother sending the heartbeat, it'll be rescheduled
-    {:noreply, state}
-  end
-
-  def handle_info(
-        :heartbeat_ack_check,
-        %{heartbeat_acknowledged: true} = state
-      ) do
-    Logger.debug("We're good")
-    {:noreply, state}
-  end
-
-  def handle_info(
-        :heartbeat_ack_check,
-        state
-      ) do
-    Logger.debug("oops! Heartbeat was not acknowledged. We have to reconnect...")
-
     {:noreply, reconnect(state)}
   end
 
