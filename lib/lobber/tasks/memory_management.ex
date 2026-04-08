@@ -3,7 +3,7 @@ defmodule Lobber.Tasks.MemoryManagement do
 
   require Logger
 
-  def prompt() do
+  defp prompt() do
     """
     You are in a deep sleep and you are sorting through your memories.
     You should use this time to consider which memories are still important.
