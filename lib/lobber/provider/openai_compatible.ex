@@ -51,8 +51,16 @@ defmodule Lobber.Provider.OpenAICompatible do
       )
 
     Tesla.post(client(base_url, api_key), "/v1/chat/completions", messages)
+    |> maybe_log_usage()
     |> handle_resp(history, tools, opts)
   end
+
+  defp maybe_log_usage({:ok, %Tesla.Env{status: 200, body: %{"usage" => %{"total_tokens" => tokens, "completion_tokens" => compl_tokens}}}} = msg) do
+    Logger.info("Used #{tokens} tokens, of which #{compl_tokens} were output")
+    msg
+  end
+
+  defp maybe_log_usage(msg), do: msg
 
   defp handle_resp(
          {:ok, %Tesla.Env{status: 200, body: %{"choices" => [choice]}}},
