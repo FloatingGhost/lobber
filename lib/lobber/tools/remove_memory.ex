@@ -16,7 +16,7 @@ defmodule Lobber.Tools.RemoveMemories do
       memory_ids: %{
         type: "array",
         items: %{
-          type: "integer"
+          type: "string"
         },
         description: "A list of ids remove from memories (from list_memories)"
       }

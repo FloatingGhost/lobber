@@ -38,6 +38,10 @@ config :lobber, Lobber.Integrations.Perplexity,
 
 config :lobber, Lobber.Tasks.Scheduler, storage: Lobber.Tasks.CaveStorage
 
+config :nanoid,
+  size: 10,
+  alphabet: "0123456789abcdefghijklmnopqrstuvwxyz"
+
 if File.exists?("./config/#{Mix.env()}.config.exs") do
   import_config "#{Mix.env()}.config.exs"
 end

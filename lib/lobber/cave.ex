@@ -170,7 +170,7 @@ defmodule Lobber.Cave do
 
     # Add timestamp for better tracking
     timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
-    new_entry = "[#{timestamp}] #{clean_content}"
+    new_entry = "#{Nanoid.generate()}: [#{timestamp}] #{clean_content}"
 
     # Write with proper newline handling
     new_content =
@@ -184,8 +184,8 @@ defmodule Lobber.Cave do
   end
 
   @doc """
-  List all memories with their IDs (line numbers)
-  Returns {:ok, [{id, content}, ...]} or {:error, reason}
+  List all memories with their IDs
+  Returns {:ok, [content, ...]} or {:error, reason}
   """
   def list_memories() do
     memories_path = file_path(@memories)
@@ -193,12 +193,9 @@ defmodule Lobber.Cave do
     case File.read(memories_path) do
       {:ok, content} ->
         lines = String.split(content, "\n")
-        # Filter out empty lines and add IDs
         memories =
           lines
-          |> Enum.with_index(1)
-          |> Enum.reject(fn {line, _id} -> String.trim(line) == "" end)
-          |> Enum.map(fn {line, id} -> {id, line} end)
+          |> Enum.reject(fn line -> String.trim(line) == "" end)
 
         {:ok, memories}
 
@@ -207,15 +204,7 @@ defmodule Lobber.Cave do
     end
   end
 
-  defp maybe_int(id) when is_integer(id), do: id
-
-  defp maybe_int(id) do
-    {id, _} = Integer.parse(id)
-    id
-  end
-
   def remove_memories(memory_ids) do
-    memory_ids = Enum.map(memory_ids, &maybe_int/1)
     memories_path = file_path(@memories)
 
     case File.read(memories_path) do
@@ -223,9 +212,11 @@ defmodule Lobber.Cave do
         new_content =
           content
           |> String.split("\n")
-          |> Enum.with_index(1)
-          |> Enum.reject(fn {_value, index} -> Enum.member?(memory_ids, index) end)
-          |> Enum.map_join("\n", fn {value, _index} -> value end)
+          |> Enum.reject(fn line ->
+            memory_ids
+            |> Enum.any?(fn id -> String.starts_with?(line, id) end)
+          end)
+          |> Enum.join("\n")
 
         File.write(memories_path, new_content)
         :ok
@@ -236,31 +227,27 @@ defmodule Lobber.Cave do
   end
 
   @doc """
-  Update a memory by its ID (line number)
+  Update a memory by its ID
   Returns :ok or {:error, reason}
   """
   def update_memory(memory_id, new_content) when is_binary(memory_id) do
-    {id, _} = Integer.parse(memory_id)
-    update_memory(id, new_content)
-  end
-
-  def update_memory(memory_id, new_content) when is_integer(memory_id) and memory_id > 0 do
     memories_path = file_path(@memories)
 
     case File.read(memories_path) do
       {:ok, content} ->
         lines = String.split(content, "\n")
+        line_id = Enum.find_index(lines, fn line -> String.starts_with?(line, memory_id) end)
 
-        if memory_id > length(lines) do
+        if is_nil(line_id) do
           {:error, :not_found}
         else
           # Clean the new content
           clean_content = String.replace(new_content, "\n", " ")
           timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
-          updated_entry = "[#{timestamp}] #{clean_content}"
+          updated_entry = "#{Nanoid.generate()}: [#{timestamp}] #{clean_content}"
 
           # Replace the line at the given position
-          new_lines = List.replace_at(lines, memory_id - 1, updated_entry)
+          new_lines = List.replace_at(lines, line_id, updated_entry)
           new_content_str = Enum.join(new_lines, "\n")
           File.write(memories_path, new_content_str)
           :ok

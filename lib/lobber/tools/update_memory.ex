@@ -13,7 +13,7 @@ defmodule Lobber.Tools.UpdateMemory do
   def parameters(),
     do: %{
       memory_id: %{
-        type: "integer",
+        type: "string",
         description: "The ID of the memory to update (from list_memories)"
       },
       new_content: %{
