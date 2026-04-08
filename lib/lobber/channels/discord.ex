@@ -15,7 +15,7 @@ defmodule Lobber.Channels.Discord do
       [
         {Lobber.Channels.Discord.Socket, [channel_name: @name]}
       ],
-      name: __MODULE__
+      name: {:via, Registry, {Lobber.Channels.registry(), :discord}}
     )
   end
 

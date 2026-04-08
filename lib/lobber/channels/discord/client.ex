@@ -8,6 +8,7 @@ defmodule Lobber.Channels.Discord.Client do
   def client() do
     Tesla.client([
       {Tesla.Middleware.BaseUrl, @discord},
+      Tesla.Middleware.Retry,
       {Tesla.Middleware.Headers, [{"content-type", "application/json"} | headers()]},
       Tesla.Middleware.JSON,
       {Tesla.Middleware.Timeout, timeout: 10_000}
