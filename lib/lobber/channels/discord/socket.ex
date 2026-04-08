@@ -71,7 +71,7 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   @impl true
-  def handle_info({:gun_up, _pid, _opts}, %{status: :connecting, conn: conn} = state) do
+  def handle_info({:gun_up, _pid, :http}, %{status: :connecting, conn: conn} = state) do
     Logger.debug("Upgrading to websocket")
     ref = :gun.ws_upgrade(conn, "/?v=10&encoding=json", Client.headers())
 
@@ -102,8 +102,9 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   @impl true
-  def handle_info(_message, %{status: :upgrading} = state) do
+  def handle_info(message, %{status: :upgrading} = state) do
     Logger.error("Unexpected upgrade message")
+    IO.inspect(message)
     {:stop, state}
   end
 
