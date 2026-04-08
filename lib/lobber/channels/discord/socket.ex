@@ -163,7 +163,10 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   def handle_info({:gun_ws, _pid, _ref, frame}, %{status: :connected} = state) do
-    {:noreply, handle_frame(frame, state)}
+    case handle_frame(frame, state) do
+      {:stop, _, _} = resp -> resp
+      %{} = state -> {:noreply, state}
+    end
   end
 
   defp handle_frame({:text, frame}, state) do
