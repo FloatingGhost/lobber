@@ -61,6 +61,7 @@ graph TD
     OR[OpenRouter]
 
     DL --> OR
+    DL --> XM[Xiaomi MiMo]
   end
 
   AT --> DL
