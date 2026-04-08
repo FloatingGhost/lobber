@@ -19,6 +19,7 @@ defmodule Lobber.Tools.AddIdentity do
 
   def run(%{"content" => content}) do
     :ok = Lobber.Cave.add_to_identity(content)
-    {:string, "Your identity has been saved"}
+    {:ok, new} = Lobber.Cave.identity()
+    {:string, "Your identity has been saved. Your identity is now:\n#{new}"}
   end
 end

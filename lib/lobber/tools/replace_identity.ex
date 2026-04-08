@@ -19,6 +19,7 @@ defmodule Lobber.Tools.ReplaceIdentity do
 
   def run(%{"content" => content}) do
     :ok = Lobber.Cave.overwrite_identity(content)
-    {:string, "Your identity has been saved"}
+    {:ok, new} = Lobber.Cave.identity()
+    {:string, "Your identity has been saved\nYour identity is now:\n#{new}"}
   end
 end

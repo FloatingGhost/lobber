@@ -25,9 +25,11 @@ defmodule Lobber.Tools.UpdateMemory do
   def run(%{"memory_id" => memory_id, "new_content" => new_content}) do
     case Lobber.Cave.update_memory(memory_id, new_content) do
       :ok ->
-        {:string, "Memory ##{memory_id} updated! Lobber remember new version now."}
+        {:ok, new} = Lobber.Cave.list_memories()
+        {:string, "Memory ##{memory_id} updated!\nYour memories are now: \n#{new}"}
 
       {:error, :not_found} ->
+
         {:string, "Memory ##{memory_id} not found! Use list_memories to see valid IDs."}
 
       {:error, reason} ->

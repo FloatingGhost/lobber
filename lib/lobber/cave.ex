@@ -300,6 +300,11 @@ defmodule Lobber.Cave do
     |> Enum.map(&Lobber.Conversation.Message.decode/1)
   end
 
+  def identity() do
+    identity = file_path(@identity)
+    File.read(identity)
+  end
+
   def add_to_identity(data) do
     identity = file_path(@identity)
     {:ok, old} = File.read(identity)
