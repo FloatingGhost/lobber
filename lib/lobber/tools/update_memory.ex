@@ -29,7 +29,6 @@ defmodule Lobber.Tools.UpdateMemory do
         {:string, "Memory ##{memory_id} updated!\nYour memories are now: \n#{new}"}
 
       {:error, :not_found} ->
-
         {:string, "Memory ##{memory_id} not found! Use list_memories to see valid IDs."}
 
       {:error, reason} ->

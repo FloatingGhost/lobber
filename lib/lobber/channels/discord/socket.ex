@@ -66,7 +66,7 @@ defmodule Lobber.Channels.Discord.Socket do
       state
       | conn: conn,
         ref: nil,
-        status: :upgrading
+        status: :connecting
     }
   end
 
@@ -128,6 +128,8 @@ defmodule Lobber.Channels.Discord.Socket do
       |> DiscordMessage.encode()
 
     :ok = :gun.ws_send(conn, websocket_ref, {:text, hb_frame})
+
+    Process.send_after(self(), :heartbeat_ack_check, @heartbeat_ack_timeout)
     {:noreply, %{state | heartbeat_acknowledged: false}}
   end
 
@@ -156,7 +158,10 @@ defmodule Lobber.Channels.Discord.Socket do
     {:noreply, reconnect(state)}
   end
 
-  @impl true
+  def handle_info({:gun_ws, _pid, _ref, {:close, 1001, ""}}, state) do
+    {:noreply, state}
+  end
+
   def handle_info({:gun_ws, _pid, _ref, frame}, %{status: :connected} = state) do
     {:noreply, handle_frame(frame, state)}
   end
@@ -341,7 +346,7 @@ defmodule Lobber.Channels.Discord.Socket do
       }
     else
       # resume time
-      Logger.debug("Resuming session")
+      Logger.debug("Resuming session #{state.session_id}")
 
       {:ok, resume_frame} =
         %DiscordMessage{
@@ -383,6 +388,11 @@ defmodule Lobber.Channels.Discord.Socket do
          state
        ) do
     reconnect(state)
+  end
+
+  defp handle_data(%DiscordMessage{opcode: :invalid_session}, state) do
+    # alright we've tried to resume and been told no, we crash
+    {:stop, :ws_died, state}
   end
 
   defp handle_data(other, state) do

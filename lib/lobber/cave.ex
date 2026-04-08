@@ -193,6 +193,7 @@ defmodule Lobber.Cave do
     case File.read(memories_path) do
       {:ok, content} ->
         lines = String.split(content, "\n")
+
         memories =
           lines
           |> Enum.reject(fn line -> String.trim(line) == "" end)
