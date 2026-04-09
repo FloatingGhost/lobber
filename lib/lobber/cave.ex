@@ -267,7 +267,7 @@ defmodule Lobber.Cave do
           clean_content = new_content
           |> String.replace("\n", " ")
           |> String.replace(~r/\[[\d\-\:\.ZT]+\]/, "")
-          |> String.strip()
+          |> String.trim()
 
           # replace the timestamp with the newest one
           updated_entry = "#{memory_id}: [#{timestamp}] #{clean_content}"
