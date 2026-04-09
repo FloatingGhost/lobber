@@ -55,7 +55,13 @@ defmodule Lobber.Provider.OpenAICompatible do
     |> handle_resp(history, tools, opts)
   end
 
-  defp maybe_log_usage({:ok, %Tesla.Env{status: 200, body: %{"usage" => %{"total_tokens" => tokens, "completion_tokens" => compl_tokens}}}} = msg) do
+  defp maybe_log_usage(
+         {:ok,
+          %Tesla.Env{
+            status: 200,
+            body: %{"usage" => %{"total_tokens" => tokens, "completion_tokens" => compl_tokens}}
+          }} = msg
+       ) do
     Logger.info("Used #{tokens} tokens, of which #{compl_tokens} were output")
     msg
   end

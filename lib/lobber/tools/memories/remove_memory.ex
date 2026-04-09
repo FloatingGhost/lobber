@@ -6,9 +6,10 @@ defmodule Lobber.Tools.RemoveMemories do
 
   def description(),
     do: """
-    Remove a memory by its ID. Use list_memories to see all memory IDs first.
-    Memories are numbered starting from 1. This helps keep Lobber's cave organized!
-    The update list of memories will be returned by this tool.
+    Remove one or more memories by their ID.
+    Memories each have a nanoID at the start of their line, this is the ID you should use.
+    This helps keep Lobber's cave organized!
+    The updated list of memories will be returned by this tool.
     """
 
   def parameters(),
@@ -31,10 +32,10 @@ defmodule Lobber.Tools.RemoveMemories do
   def run(%{"memory_ids" => memory_ids}) when is_list(memory_ids) do
     case Lobber.Cave.remove_memories(memory_ids) do
       :ok ->
-        {:string, new_memories} = Lobber.Tools.ListMemories.run(nil)
+        new = Lobber.Cave.memories()
 
         {:string,
-         "Memories #{Enum.join(memory_ids, ", ")} removed from cave! Lobber forget those ones. \n#{new_memories}"}
+         "Memories #{Enum.join(memory_ids, ", ")} removed from cave! Lobber forget those ones. \n#{new}"}
 
       {:error, reason} ->
         {:string, "Error removing memory: #{reason}"}

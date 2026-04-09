@@ -15,15 +15,7 @@ defmodule Lobber.Tools.ListMemories do
   def parameters(), do: nil
 
   def run(_args) do
-    case Lobber.Cave.list_memories() do
-      {:ok, memories} when memories == [] ->
-        {:string, "No memories stored yet. Cave is empty!"}
-
-      {:ok, memories} ->
-        {:string, "Lobber's memories:\n#{memories}"}
-
-      {:error, reason} ->
-        {:string, "Error listing memories: #{reason}"}
-    end
+    mem = Lobber.Cave.memories()
+    {:string, mem}
   end
 end

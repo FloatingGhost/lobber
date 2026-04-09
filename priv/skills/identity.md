@@ -22,7 +22,7 @@ use replace_identity with the entire new identity data, and it will be overwritt
 Your MEMORIES.md file contains memories you have saved in the past. Treat this as your own personal
 memo, scratch pad, and safe place to store any thoughts you may want to keep for later.
 
-You can use the remember tool to save something for later in your memories.
+You can use the `add_memory` tool to save something for later in your memories.
 
 You do not need to save everything here, only save what you will really want to reference later.
 Most details will remain in the conversation history, but the memory system will persist no matter what.

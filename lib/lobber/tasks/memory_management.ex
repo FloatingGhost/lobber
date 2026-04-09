@@ -4,6 +4,8 @@ defmodule Lobber.Tasks.MemoryManagement do
   require Logger
 
   defp prompt() do
+    {:ok, memories} = Lobber.Cave.list_memories()
+
     """
     You are in a deep sleep and you are sorting through your memories.
     You should use this time to consider which memories are still important.
@@ -24,7 +26,25 @@ defmodule Lobber.Tasks.MemoryManagement do
     Note! it is entirely valid for you to decide that memories and identity are fine as-is and leave them
     how they are.
 
+    MEMORY TOOL INSTRUCTIONS:
+    1. Reference the memories below as your starting memories
+    2. Use update_memory (with memory_id) to MODIFY existing memories - NOT add_memory!
+      - use update_multiple_memories if you want to alter more than one
+    3. Use remove_memories (with memory_id list) to DELETE outdated entries
+    4. Only use remember for genuinely NEW information not already in memories
+    5. Do NOT combine everything into one mega-memory - keep memories focused.
+    5. If you find a mega-memory with multiple topics, use add_memories to create a set of new memories on each topic,
+       then delete the mega-memory. The new memories should cumulatively contain all information that the mega-memory contained.
+    7. If two memories overlap, update_memory on one, remove_memories on the other
+
+    You can use `add_memories` to add more than one memory at once, or `update_memories` to update multiple at once.
+
+    The same rules apply for identity - use replace_identity if you need to rewrite, not add_identity to append duplicates.
+
     You started dreaming at #{Lobber.Conversation.now()}
+
+    Your starting memories:
+    #{memories}
 
     Today's conversation history:
 

@@ -14,8 +14,10 @@ defmodule Lobber.Agent do
 
   @starting_tools [
     Lobber.Tools.AddTool,
-    Lobber.Tools.Remember,
+    Lobber.Tools.AddMemory,
+    Lobber.Tools.AddMultipleMemories,
     Lobber.Tools.UpdateMemory,
+    Lobber.Tools.UpdateMultipleMemories,
     Lobber.Tools.RemoveMemories,
     Lobber.Tools.ListMemories,
     Lobber.Tools.SummariseWeb,

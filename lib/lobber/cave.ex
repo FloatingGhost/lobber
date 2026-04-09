@@ -161,7 +161,7 @@ defmodule Lobber.Cave do
     File.write(path, content)
   end
 
-  def remember(content) do
+  def add_memory(content) do
     memories = file_path(@memories)
     {:ok, old} = File.read(memories)
 
@@ -183,6 +183,13 @@ defmodule Lobber.Cave do
     File.write(memories, new_content)
   end
 
+  def add_memories([]), do: :ok
+
+  def add_memories([memory | rest]) do
+    add_memory(memory)
+    add_memories(rest)
+  end
+
   @doc """
   List all memories with their IDs
   Returns {:ok, [content, ...]} or {:error, reason}
@@ -202,6 +209,19 @@ defmodule Lobber.Cave do
 
       {:error, reason} ->
         {:error, "Could not read memories: #{reason}"}
+    end
+  end
+
+  def memories() do
+    case list_memories() do
+      {:ok, memories} when memories == [] ->
+        "No memories stored yet. Cave is empty!"
+
+      {:ok, memories} ->
+        Enum.join(memories, "\n")
+
+      {:error, reason} ->
+        "Error listing memories: #{reason}"
     end
   end
 
@@ -240,23 +260,34 @@ defmodule Lobber.Cave do
         line_id = Enum.find_index(lines, fn line -> String.starts_with?(line, memory_id) end)
 
         if is_nil(line_id) do
-          {:error, :not_found}
+          {:error, :not_found, memory_id}
         else
-          # Clean the new content
-          clean_content = String.replace(new_content, "\n", " ")
           timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
-          updated_entry = "#{Nanoid.generate()}: [#{timestamp}] #{clean_content}"
+          # Clean the new content
+          clean_content = new_content
+          |> String.replace("\n", " ")
+          |> String.replace(~r/\[[\d\-\:\.ZT]+\]/, "")
+          |> String.strip()
+
+          # replace the timestamp with the newest one
+          updated_entry = "#{memory_id}: [#{timestamp}] #{clean_content}"
 
           # Replace the line at the given position
           new_lines = List.replace_at(lines, line_id, updated_entry)
           new_content_str = Enum.join(new_lines, "\n")
           File.write(memories_path, new_content_str)
-          :ok
+          {:ok, memory_id}
         end
 
       {:error, reason} ->
         {:error, "Could not read memories: #{reason}"}
     end
+  end
+
+  def update_memories(memories) when is_list(memories) do
+    Enum.map(memories, fn %{"memory_id" => id, "new_content" => content} ->
+      update_memory(id, content)
+    end)
   end
 
   def store(file_name, content) do

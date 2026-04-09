@@ -144,6 +144,14 @@ defmodule Lobber.Channels.Discord.Socket do
     end
   end
 
+  def handle_info(
+        {:gun_ws, _pid, _ref, frame},
+        %{status: :closing_for_reconnect} = state
+      ) do
+    # race condition! we didn't get a heartbeat ACK and we're in the process of closing things
+    {:noreply, state}
+  end
+
   # we tried to gracefully close the websocket but didn't get a confirm
   def handle_info(
         :reconnect_timeout,

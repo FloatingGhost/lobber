@@ -11,7 +11,8 @@ defmodule Lobber.Tools do
   def list() do
     ([
        Tools.AddTool,
-       Tools.Remember,
+       Tools.AddMemory,
+       Tools.AddMultipleMemories,
        Tools.Store,
        Tools.SearchWeb,
        Tools.SummariseWeb,
@@ -24,7 +25,8 @@ defmodule Lobber.Tools do
        Tools.ProposeModule,
        Tools.ListMemories,
        Tools.RemoveMemories,
-       Tools.UpdateMemory
+       Tools.UpdateMemory,
+       Tools.UpdateMultipleMemories
      ] ++ list_by_behaviour())
     |> Enum.uniq()
   end
