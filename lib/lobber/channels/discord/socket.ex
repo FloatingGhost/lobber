@@ -252,11 +252,11 @@ defmodule Lobber.Channels.Discord.Socket do
          %DiscordMessage{
            opcode: :dispatch,
            type: "RESUMED"
-         },
+         } = message,
          state
        ) do
     Logger.info("Discord resumed!")
-
+    Logger.debug(inspect(message))
     state
   end
 
