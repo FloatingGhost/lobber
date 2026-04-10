@@ -264,10 +264,11 @@ defmodule Lobber.Cave do
         else
           timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
           # Clean the new content
-          clean_content = new_content
-          |> String.replace("\n", " ")
-          |> String.replace(~r/\[[\d\-\:\.ZT]+\]/, "")
-          |> String.trim()
+          clean_content =
+            new_content
+            |> String.replace("\n", " ")
+            |> String.replace(~r/\[[\d\-\:\.ZT]+\]/, "")
+            |> String.trim()
 
           # replace the timestamp with the newest one
           updated_entry = "#{memory_id}: [#{timestamp}] #{clean_content}"

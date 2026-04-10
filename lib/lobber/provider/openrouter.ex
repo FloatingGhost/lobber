@@ -24,7 +24,7 @@ defmodule Lobber.Provider.OpenRouter do
   end
 
   @impl true
-  def prompt(history, next, tools, model) do
+  def prompt(history, next, tools, model, _opts) do
     Lobber.Provider.OpenAICompatible.prompt(
       @openrouter,
       api_key(),

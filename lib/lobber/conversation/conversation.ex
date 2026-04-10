@@ -102,30 +102,11 @@ defmodule Lobber.Conversation do
   @impl true
   def handle_cast(
         {:message, respond_to, message, opts},
-        %{id: id, history: history, processing: false} = state
+        state
       ) do
-    Logger.info("Message: #{message}")
+    Logger.info("Message: #{inspect(message)}")
 
-    msg = %Message{
-      role: "user",
-      content: with_timestamp(message)
-    }
-
-    {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
-    # wrap opts in our own layer so we know who to respond to
-    agent_opts = %{
-      agent_opts: agent_opts,
-      respond_to: respond_to,
-      channel_opts: opts,
-      routing: [
-        provider: state.provider,
-        model_id: state.model_id
-      ]
-    }
-
-    Lobber.Agent.prompt(self(), history, msg, agent_opts)
-
-    {:noreply, %{state | history: concat_and_backup_messages(id, history, msg), processing: true}}
+    handle_new_message(respond_to, message, opts, state)
   end
 
   @impl true
@@ -168,14 +149,61 @@ defmodule Lobber.Conversation do
     {:noreply, %{state | history: concat_and_backup_messages(id, history, message)}}
   end
 
+  defp handle_new_message(
+         respond_to,
+         message,
+         opts,
+         %{id: id, history: history, processing: false} = state
+       ) do
+    {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
+    # wrap opts in our own layer so we know who to respond to
+    agent_opts = %{
+      agent_opts: agent_opts,
+      respond_to: respond_to,
+      channel_opts: opts,
+      routing: [
+        provider: state.provider,
+        model_id: state.model_id
+      ]
+    }
+
+    msg = construct_user_message(message)
+
+    Lobber.Agent.prompt(self(), history, msg, agent_opts)
+
+    {:noreply, %{state | history: concat_and_backup_messages(id, history, msg), processing: true}}
+  end
+
+  defp construct_user_message({message, urls}) do
+    Message.new()
+    |> Message.role("user")
+    |> Message.content(with_timestamp(message), urls)
+  end
+
   def concat_messages(history, %Message{} = next) do
     history ++ [next]
   end
 
   defp concat_and_backup_messages(id, history, next) do
-    concat = concat_messages(history, next)
+    concat =
+      history
+      |> concat_messages(next)
+      |> Enum.map(&strip_non_text_blocks/1)
+
     Lobber.Cave.backup_conversation(id, concat)
     concat
+  end
+
+  defp strip_non_text_blocks(%Message{content: content} = msg) when is_binary(content), do: msg
+
+  defp strip_non_text_blocks(%Message{content: content} = msg) when is_list(content) do
+    case Enum.find(content, fn block -> Map.get(block, :type) == "text" end) do
+      %{text: text} ->
+        %Message{msg | content: text}
+
+      nil ->
+        %Message{msg | content: "no text content"}
+    end
   end
 
   defp drain_next_or_compact(state) do
@@ -199,26 +227,7 @@ defmodule Lobber.Conversation do
       {{:value, {message, respond_to, opts}}, rest} ->
         state = %{state | pending_messages: rest}
 
-        msg = %Message{
-          role: "user",
-          content: with_timestamp(message)
-        }
-
-        {agent_opts, opts} = Map.pop(opts, :agent_opts, [])
-
-        agent_opts = %{
-          agent_opts: agent_opts,
-          respond_to: respond_to,
-          channel_opts: opts,
-          routing: [
-            provider: state.provider,
-            model_id: state.model_id
-          ]
-        }
-
-        Lobber.Agent.prompt(self(), state.history, msg, agent_opts)
-
-        %{state | history: concat_and_backup_messages(state.id, state.history, msg)}
+        handle_new_message(respond_to, message, opts, state)
 
       {:empty, _} ->
         %{state | processing: false}
@@ -315,7 +324,7 @@ defmodule Lobber.Conversation do
   Add a message to a conversation
   Will process the message given, then respond to the given pid
   """
-  @spec add_message(pid(), pid(), binary(), map()) :: :ok
+  @spec add_message(pid(), pid(), binary() | {binary(), list(binary())}, map()) :: :ok
   def add_message(conversation_pid, respond_to, message, opts) do
     GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
   end

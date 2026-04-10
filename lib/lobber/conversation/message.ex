@@ -14,6 +14,39 @@ defmodule Lobber.Conversation.Message do
   defp empty_list_if_nil(nil), do: []
   defp empty_list_if_nil(other), do: other
 
+  def new(), do: %__MODULE__{}
+
+  def role(%__MODULE__{} = struct, r) do
+    %__MODULE__{struct | role: r}
+  end
+
+  def content(%__MODULE__{} = struct, c) do
+    %__MODULE__{struct | content: c}
+  end
+
+  def content(%__MODULE__{} = struct, c, []) do
+    content(struct, c)
+  end
+
+  def content(%__MODULE__{} = struct, c, images) do
+    image_content =
+      Enum.map(images, fn url ->
+        %{
+          type: "image_url",
+          image_url: %{
+            url: url
+          }
+        }
+      end)
+
+    %__MODULE__{
+      struct
+      | content: [
+          %{type: "text", text: c} | image_content
+        ]
+    }
+  end
+
   def decode(
         %{
           "role" => role,

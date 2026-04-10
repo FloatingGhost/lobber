@@ -103,9 +103,6 @@ defmodule Lobber.Channels.Discord.Socket do
   def handle_info({:gun_upgrade, _pid, _ref, _, _}, %{status: :upgrading} = state) do
     Logger.debug("Upgraded")
 
-    # once we're up and have confirmed valid creds, we can start command registration
-    # this shouldn't be in our context though, we do not care if it completes
-    Task.start(Lobber.Channels.Discord.Commands, :create_commands, [])
     my_id = Lobber.Channels.Discord.Commands.my_id()
     Logger.info("We are #{my_id}")
 
@@ -280,22 +277,33 @@ defmodule Lobber.Channels.Discord.Socket do
          %{
            opcode: :dispatch,
            type: "MESSAGE_CREATE",
-           data: %{
-             "author" => %{"username" => username},
-             "content" => content,
-             "channel_id" => channel_id
-           }
+           data:
+             %{
+               "author" => %{"username" => username},
+               "content" => content,
+               "channel_id" => channel_id,
+               "attachments" => attachments
+             } = data
          },
          %{channel_name: channel_name} = state
        ) do
     Logger.debug("#{username}: #{content}")
+
+    attachment_urls =
+      attachments
+      |> Enum.filter(fn att ->
+        att
+        |> Map.get("content_type")
+        |> String.starts_with?("image")
+      end)
+      |> Enum.map(fn att -> Map.get(att, "url") end)
 
     case with_conversation(channel_name, channel_id, state) do
       {:ok, conversation} ->
         Lobber.Conversation.add_message(
           conversation,
           self(),
-          content,
+          {content, attachment_urls},
           %{channel_id: channel_id}
         )
 

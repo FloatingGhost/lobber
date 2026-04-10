@@ -28,7 +28,8 @@ config :lobber, Lobber.Provider.OpenRouter, api_key: System.get_env("OPENROUTER_
 
 config :lobber, Lobber.Provider.Xiaomi,
   api_key: System.get_env("XIAOMI_API_KEY"),
-  type: :standard
+  type: :standard,
+  image_model: "mimo-v2-omni"
 
 config :lobber, Lobber.Channels.Discord, bot_token: System.get_env("DISCORD_BOT_TOKEN")
 

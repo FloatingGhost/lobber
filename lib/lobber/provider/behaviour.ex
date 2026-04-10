@@ -8,13 +8,14 @@ defmodule Lobber.Provider.Behaviour do
   @doc """
   Calls the actual provider
 
-  prompt(history, next_message, tools, model_id)
+  prompt(history, next_message, tools, model_id, opts)
   iex> prompt([%{role: "system", content: "prompt"}], %{role: "user", content: "abc", tools, model_id})
   """
   @callback prompt(
               list(Lobber.Conversation.Message.t()),
               Lobber.Conversation.Message.t(),
               list,
-              binary
+              binary,
+              keyword
             ) :: {:text, binary} | {atom, binary}
 end
