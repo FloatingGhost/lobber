@@ -79,7 +79,7 @@ defmodule Lobber.Provider.OpenAICompatible do
 
   defp handle_resp({:ok, %Tesla.Env{status: 400, body: body}}, _, _, _) do
     Logger.error("Bad request to OpenAI! #{inspect(body)}")
-    %Conversation.Message.new()
+    Conversation.Message.new()
     |> Conversation.Message.role("assistant")
     |> Conversation.Message.content("Bad request to provider: #{inspect(body)}")
   end
