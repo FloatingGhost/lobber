@@ -113,9 +113,9 @@ defmodule Lobber.Channels.Discord.Socket do
   end
 
   # gun has died for some reason
-  def handle_info({:gun_down, _pid, :ws, reason, _ref}, state) do
+  def handle_info({:gun_down, _pid, :ws, reason, _ref}, %{resume_url: url} = state) do
     Logger.info("Websocket conn has closed unexpectedly - #{inspect(reason)}")
-    {:noreply, reconnect(state)}
+    {:noreply, connect(%{state | status: :connecting}, url)}
   end
 
   # remote side DC'd us?
@@ -252,11 +252,13 @@ defmodule Lobber.Channels.Discord.Socket do
          %DiscordMessage{
            opcode: :dispatch,
            type: "RESUMED"
-         },
-         state
+         } = message,
+         %{heartbeat_interval: heartbeat} = state
        ) do
     Logger.info("Discord resumed!")
-
+    Logger.debug(inspect(message))
+    next_hb = next_heartbeat(heartbeat)
+    Process.send_after(self(), :heartbeat, next_hb)
     state
   end
 
