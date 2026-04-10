@@ -94,7 +94,7 @@ defmodule Lobber.Conversation do
         {:message, respond_to, message, opts},
         %{processing: true, pending_messages: pending} = state
       ) do
-    Logger.info("Queuing message (agent busy): #{message}")
+    Logger.info("Queuing message (agent busy): #{inspect(message)}")
     pending = :queue.in({message, respond_to, opts}, pending)
     {:noreply, %{state | pending_messages: pending}}
   end
