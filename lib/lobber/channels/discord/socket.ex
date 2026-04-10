@@ -253,10 +253,12 @@ defmodule Lobber.Channels.Discord.Socket do
            opcode: :dispatch,
            type: "RESUMED"
          } = message,
-         state
+         %{heartbeat_interval: heartbeat} = state
        ) do
     Logger.info("Discord resumed!")
     Logger.debug(inspect(message))
+    next_hb = next_heartbeat(heartbeat)
+    Process.send_after(self(), :heartbeat, next_hb)
     state
   end
 
