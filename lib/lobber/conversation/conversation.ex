@@ -174,6 +174,10 @@ defmodule Lobber.Conversation do
     {:noreply, %{state | history: concat_and_backup_messages(id, history, msg), processing: true}}
   end
 
+  defp construct_user_message(message) when is_binary(message) do
+    construct_user_message({message, []})
+  end
+
   defp construct_user_message({message, urls}) do
     Message.new()
     |> Message.role("user")
