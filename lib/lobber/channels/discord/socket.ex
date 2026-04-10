@@ -298,13 +298,21 @@ defmodule Lobber.Channels.Discord.Socket do
       end)
       |> Enum.map(fn att -> Map.get(att, "url") end)
 
+    delay = if Enum.empty?(attachment_urls) do
+      0
+    else
+      5_000
+    end
+
+
     case with_conversation(channel_name, channel_id, state) do
       {:ok, conversation} ->
         Lobber.Conversation.add_message(
           conversation,
           self(),
           {content, attachment_urls},
-          %{channel_id: channel_id}
+          %{channel_id: channel_id},
+          delay: delay
         )
 
         state

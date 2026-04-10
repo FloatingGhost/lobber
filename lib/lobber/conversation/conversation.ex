@@ -80,6 +80,14 @@ defmodule Lobber.Conversation do
   end
 
   @impl true
+  def handle_info(
+        {:message, _, _, _} = message,
+        state
+      ) do
+    handle_cast(message, state)
+  end
+
+  @impl true
   def handle_cast(
         {:message, respond_to, "!!" <> command, opts},
         state
@@ -328,9 +336,14 @@ defmodule Lobber.Conversation do
   Add a message to a conversation
   Will process the message given, then respond to the given pid
   """
-  @spec add_message(pid(), pid(), binary() | {binary(), list(binary())}, map()) :: :ok
-  def add_message(conversation_pid, respond_to, message, opts) do
-    GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
+  @spec add_message(pid(), pid(), binary() | {binary(), list(binary())}, map(), keyword) :: :ok
+  def add_message(conversation_pid, respond_to, message, opts, conversation_opts \\ []) do
+    delay = Keyword.get(conversation_opts, :delay, 0)
+    if delay == 0 do
+      GenServer.cast(conversation_pid, {:message, respond_to, message, opts})
+    else
+      Process.send_after(conversation_pid, {:message, respond_to, message, opts}, delay)
+    end
   end
 
   @spec with_timestamp(binary()) :: binary()
